@@ -13,7 +13,6 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        /* Lock styling for members */
         .member-locked {
             pointer-events: none !important;
             opacity: 0.75 !important;
@@ -22,7 +21,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <!-- TOP BAR: Room Security, Role Badge, Credits & Live UTC Clock -->
+    <!-- TOP BAR -->
     <div>
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-2.5 shadow-md">
             <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -39,17 +38,15 @@
                 <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg p-1 space-x-1.5 text-xs">
                     <button onclick="openRoomModal()" class="flex items-center space-x-1.5 px-2 py-1 bg-slate-900 hover:bg-slate-800 rounded text-slate-200 transition">
                         <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-red-500"></span>
-                        <span class="font-bold" id="currentRoomDisplay">Room: Alpha</span>
+                        <span class="font-bold" id="currentRoomDisplay">Room: ----</span>
                         <i class="fa-solid fa-gear text-[10px] text-slate-400"></i>
                     </button>
 
-                    <!-- User Role Badge -->
-                    <div id="roleBadgeContainer" class="flex items-center">
-                        <!-- Populated by JS: ADMIN or VIEWER -->
-                    </div>
+                    <!-- Role Badge -->
+                    <div id="roleBadgeContainer" class="flex items-center"></div>
 
-                    <!-- Invite Dropdown Button -->
-                    <button onclick="openInviteModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded transition font-bold flex items-center">
+                    <!-- Invite Button -->
+                    <button onclick="openInviteModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded transition font-bold flex items-center">
                         <i class="fa-solid fa-share-nodes mr-1"></i> Invite
                     </button>
                 </div>
@@ -67,12 +64,10 @@
             </div>
         </header>
 
-        <!-- HOLDINGS / TARGET TABS (Main Target, Turret 1, Counter, etc.) -->
+        <!-- TARGET TABS (Main Target, Turrets, Counter) -->
         <nav class="bg-slate-900/90 border-b border-slate-800 px-4 py-2">
             <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
-                <div id="holdingsTabs" class="flex items-center space-x-1.5">
-                    <!-- Dynamic tabs -->
-                </div>
+                <div id="holdingsTabs" class="flex items-center space-x-1.5"></div>
                 <button id="addHoldingBtn" onclick="addNewHolding()" class="flex-shrink-0 bg-slate-800 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-bold transition flex items-center">
                     <i class="fa-solid fa-plus mr-1"></i> Add Holding
                 </button>
@@ -99,7 +94,7 @@
                         </div>
                     </div>
                     
-                    <!-- Live UTC Clock -->
+                    <!-- Live UTC Clock under question -->
                     <div class="flex items-center justify-between bg-slate-950 border border-amber-500/30 rounded-lg px-4 py-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -108,7 +103,7 @@
                         <span id="utcClock" class="mono text-amber-300 font-bold text-lg md:text-xl tracking-wider">--:--:-- UTC</span>
                     </div>
 
-                    <!-- Delay presets & custom typing (Disabled for non-admins) -->
+                    <!-- Delay presets & custom typing -->
                     <div id="rallyDelayControls" class="space-y-2 pt-1">
                         <label class="text-[11px] font-semibold text-slate-400 uppercase">Select Delay or Type Minutes:</label>
                         <div class="flex flex-wrap items-center gap-2">
@@ -161,7 +156,7 @@
                     <div id="leadsList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 3. PLAIN TEXT OUTPUT FOR IN-GAME CHAT -->
+                <!-- 3. PLAIN TEXT OUTPUT FOR CHAT -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
                         <div>
@@ -186,7 +181,7 @@
 
             </section>
 
-            <!-- RIGHT COLUMN: Active Targets Timetable & Shared Opponent Radar (5 Cols) -->
+            <!-- RIGHT COLUMN: Countdown Queue & Opponent Radar (5 Cols) -->
             <aside class="lg:col-span-5 space-y-5">
 
                 <!-- SCHEDULED DISPLAY -->
@@ -234,7 +229,7 @@
                             <h2 class="text-xs uppercase tracking-wider text-red-400 font-bold flex items-center">
                                 <i class="fa-solid fa-shield-halved mr-1.5 text-red-500"></i> Opponent March Radar
                             </h2>
-                            <span class="text-[11px] text-slate-400">Synchronized live for all scouts in room</span>
+                            <span class="text-[11px] text-slate-400">Total Arrival = +5m Rally Prep + March</span>
                         </div>
                         <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
                             <i class="fa-solid fa-plus mr-1"></i> Add Enemy
@@ -274,24 +269,32 @@
                 <button onclick="closeRoomModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
+            <!-- Quick Joven Preset Button -->
+            <button onclick="loadJovenRoomPreset()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center transition">
+                <i class="fa-solid fa-star text-amber-400 mr-1.5"></i> Load #ElJoven Official Room [S1488]
+            </button>
+
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Code</label>
-                    <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. WAR-ALPHA">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-slate-400 font-semibold uppercase text-[10px]">Room Code [1111 - 9999]</label>
+                        <button onclick="generateNewRandomRoom()" class="text-[10px] text-amber-400 hover:underline">🎲 New Random</button>
+                    </div>
+                    <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. 5824">
                 </div>
                 <div>
                     <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Member Password</label>
-                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for everyone">
+                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for members">
                 </div>
                 <div class="pt-2 border-t border-slate-800">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-amber-400 font-bold uppercase text-[10px]">
                             <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Admin / Caller PIN
                         </label>
-                        <span class="text-[10px] text-slate-500 font-mono">Needed to Edit</span>
+                        <span class="text-[10px] text-slate-500 font-mono">Required to Edit</span>
                     </div>
                     <input type="password" id="modalAdminPin" class="w-full bg-slate-950 border border-amber-500/50 px-3 py-2 rounded text-amber-300 font-mono outline-none focus:border-amber-500" placeholder="Enter Admin PIN">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank if joining as Member (View-Only).</span>
+                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to join as Member (View-Only).</span>
                 </div>
             </div>
 
@@ -356,12 +359,11 @@
                 name: "Main Target",
                 startMinutes: 3,
                 leads: [
-                    { name: "Kilam", march: "00:15", gap: 1 },
-                    { name: "Toutoutown", march: "00:25", gap: 0 },
-                    { name: "Kenrick", march: "00:35", gap: 0 },
-                    { name: "Rob", march: "00:45", gap: 0 },
-                    { name: "Trony", march: "00:55", gap: 0 },
-                    { name: "ElJoven", march: "00:55", gap: 0 }
+                    { name: "Kilam", march: "00:15", gap: 0 },
+                    { name: "Toutoutown", march: "00:15", gap: 0 },
+                    { name: "Kenrick", march: "00:15", gap: 0 },
+                    { name: "Trony", march: "00:15", gap: 0 },
+                    { name: "Rob", march: "00:45", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -383,10 +385,15 @@
         ];
 
         // Security & Roles State
-        let roomCode = "Alpha";
+        let roomCode = "";
         let roomPass = "1234";
-        let roomAdminPin = "9999"; // Set default room admin pin
-        let userRole = "admin";    // 'admin' or 'member'
+        let roomAdminPin = "9999";
+        let userRole = "admin";
+
+        // Special "Joven" Presets
+        const JOVEN_ROOM = "Joven";
+        const JOVEN_MEMBER_PASS = "1488";
+        const JOVEN_ADMIN_PIN = "Joven1488";
 
         // Unique Client Identifier
         const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
@@ -396,11 +403,27 @@
         let broadcastTimer = null;
 
         function debouncedBroadcast() {
-            if (userRole !== 'admin') return; // Only admins broadcast updates
+            if (userRole !== 'admin') return;
             clearTimeout(broadcastTimer);
             broadcastTimer = setTimeout(() => {
                 broadcastFullState();
             }, 500);
+        }
+
+        // --- Random Code Generator [1111 - 9999] ---
+        function getRandomRoomCode() {
+            return Math.floor(1111 + Math.random() * (9999 - 1111 + 1)).toString();
+        }
+
+        function generateNewRandomRoom() {
+            document.getElementById('modalRoomCode').value = getRandomRoomCode();
+        }
+
+        // Quick Preset for Special Joven Room
+        function loadJovenRoomPreset() {
+            document.getElementById('modalRoomCode').value = JOVEN_ROOM;
+            document.getElementById('modalRoomPass').value = JOVEN_MEMBER_PASS;
+            document.getElementById('modalAdminPin').value = ""; // Blank for members
         }
 
         // --- Role & Permissions Enforcement ---
@@ -413,7 +436,6 @@
             const isAdmin = userRole === 'admin';
             const badgeContainer = document.getElementById('roleBadgeContainer');
 
-            // 1. Role Badge in Header
             if (isAdmin) {
                 badgeContainer.innerHTML = `
                     <span class="bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold px-2 py-0.5 rounded text-[11px] flex items-center">
@@ -428,27 +450,22 @@
                 `;
             }
 
-            // 2. Lock / Unlock Inputs
             document.getElementById('holdingNameInput').disabled = !isAdmin;
             document.getElementById('startMinutesInput').disabled = !isAdmin;
 
-            // Preset Buttons
             document.querySelectorAll('.preset-btn').forEach(btn => {
                 btn.disabled = !isAdmin;
                 if (!isAdmin) btn.classList.add('opacity-40', 'cursor-not-allowed');
                 else btn.classList.remove('opacity-40', 'cursor-not-allowed');
             });
 
-            // Add Buttons
             document.getElementById('addLeadBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('addHoldingBtn').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('addOpponentBtn').style.display = isAdmin ? 'block' : 'none';
 
-            // Start Countdown Action Button
             document.getElementById('startRallyBtn').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('memberLockedBanner').style.display = isAdmin ? 'none' : 'block';
 
-            // Leads table inputs lock
             renderCurrentHolding();
             renderOpponents();
         }
@@ -597,7 +614,7 @@
         }
 
         function handleIncomingSync(data) {
-            if (!data || data.senderId === myClientId) return; // Drop own echoes
+            if (!data || data.senderId === myClientId) return;
 
             if (data.type === 'REQ_SYNC') {
                 if (userRole === 'admin') broadcastFullState();
@@ -649,7 +666,7 @@
         function openRoomModal() {
             document.getElementById('modalRoomCode').value = roomCode;
             document.getElementById('modalRoomPass').value = roomPass;
-            document.getElementById('modalAdminPin').value = (userRole === 'admin') ? roomAdminPin : '';
+            document.getElementById('modalAdminPin').value = (userRole === 'admin' && roomCode !== JOVEN_ROOM) ? roomAdminPin : '';
             document.getElementById('roomModal').classList.remove('hidden');
         }
 
@@ -658,17 +675,46 @@
         }
 
         function applyRoomSettings() {
-            roomCode = document.getElementById('modalRoomCode').value.trim() || "Alpha";
-            roomPass = document.getElementById('modalRoomPass').value.trim() || "1234";
+            const enteredCode = document.getElementById('modalRoomCode').value.trim() || getRandomRoomCode();
+            const enteredPass = document.getElementById('modalRoomPass').value.trim() || "1234";
             const enteredAdminPin = document.getElementById('modalAdminPin').value.trim();
 
-            if (enteredAdminPin === roomAdminPin) {
-                userRole = "admin";
-            } else if (enteredAdminPin === "") {
-                userRole = "member";
+            const isJoven = enteredCode.toLowerCase() === JOVEN_ROOM.toLowerCase();
+
+            if (isJoven) {
+                roomCode = JOVEN_ROOM;
+                roomPass = JOVEN_MEMBER_PASS;
+                roomAdminPin = JOVEN_ADMIN_PIN;
+
+                if (enteredAdminPin === JOVEN_ADMIN_PIN) {
+                    userRole = "admin";
+                } else if (enteredPass === JOVEN_MEMBER_PASS) {
+                    userRole = "member";
+                } else {
+                    alert("Invalid password for #ElJoven room! Check member password (1488) or Admin PIN.");
+                    return;
+                }
             } else {
-                alert("Incorrect Admin PIN! Entering as Member (View-Only).");
-                userRole = "member";
+                const previousRoom = roomCode;
+                roomCode = enteredCode;
+
+                if (enteredCode === previousRoom && userRole === 'admin') {
+                    roomPass = enteredPass;
+                    if (enteredAdminPin) roomAdminPin = enteredAdminPin;
+                } else {
+                    if (enteredAdminPin && (enteredAdminPin === roomAdminPin || roomAdminPin === "9999")) {
+                        userRole = "admin";
+                        roomPass = enteredPass;
+                        roomAdminPin = enteredAdminPin;
+                    } else if (!enteredAdminPin) {
+                        userRole = "member";
+                        roomPass = enteredPass;
+                    } else {
+                        alert("Entered Admin PIN does not match. Joining as Member (View-Only).");
+                        userRole = "member";
+                        roomPass = enteredPass;
+                    }
+                }
             }
 
             closeRoomModal();
@@ -696,18 +742,39 @@
             });
         }
 
+        // --- Initialize Page & URL Params ---
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const r = params.get('room');
             const p = params.get('pass');
             const a = params.get('admin');
 
-            if (r) roomCode = r;
-            if (p) roomPass = p;
-            if (a && a === roomAdminPin) {
+            if (r) {
+                roomCode = r;
+                const isJoven = roomCode.toLowerCase() === JOVEN_ROOM.toLowerCase();
+
+                if (isJoven) {
+                    roomPass = JOVEN_MEMBER_PASS;
+                    roomAdminPin = JOVEN_ADMIN_PIN;
+                    if (a === JOVEN_ADMIN_PIN) {
+                        userRole = "admin";
+                    } else {
+                        userRole = "member";
+                    }
+                } else {
+                    roomPass = p || "1234";
+                    if (a) {
+                        roomAdminPin = a;
+                        userRole = "admin";
+                    } else {
+                        userRole = "member";
+                    }
+                }
+            } else {
+                roomCode = getRandomRoomCode();
+                roomPass = "1234";
+                roomAdminPin = "9999";
                 userRole = "admin";
-            } else if (r) {
-                userRole = "member"; // Joined via shared room link without admin pin
             }
         }
 
@@ -748,7 +815,6 @@
         function renderHoldingTabs() {
             const container = document.getElementById('holdingsTabs');
             container.innerHTML = '';
-
             const isAdmin = userRole === 'admin';
 
             holdings.forEach((h, index) => {
@@ -1159,7 +1225,7 @@
             }
         }
 
-        // --- Opponents Radar ---
+        // --- Opponents Radar (Includes +5m Prep & Cancel Option) ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
@@ -1167,12 +1233,13 @@
 
             opponents.forEach((op, index) => {
                 const card = document.createElement('div');
-                card.className = `bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2 text-xs ${!isAdmin ? 'member-locked' : ''}`;
+                const isRunning = !!op.etaUtc;
+                card.className = `bg-slate-950 border ${isRunning ? 'border-red-500/60 bg-red-950/20' : 'border-slate-800'} rounded-lg p-3 space-y-2 text-xs ${!isAdmin ? 'member-locked' : ''}`;
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
                         <input type="text" value="${op.name}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'name', this.value)"
                             class="bg-slate-900 border border-slate-700 px-2 py-1 rounded text-red-300 font-semibold focus:border-red-500 outline-none w-36" placeholder="Enemy Name">
-                        ${isAdmin ? `<button onclick="removeOpponent(${index})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                        ${isAdmin ? `<button onclick="removeOpponent(${index})" class="text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -1181,17 +1248,25 @@
                                 class="w-full bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white mono text-center focus:border-red-500 outline-none">
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block mb-0.5">Arrival (UTC)</span>
+                            <span class="text-[10px] text-slate-400 block mb-0.5">Arrival (UTC) <span class="text-amber-400 font-bold">(+5m)</span></span>
                             <div class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-center text-amber-300 mono font-bold">
                                 ${op.etaUtc ? formatUtcMmSs(op.etaUtc) : "--:--"}
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between items-center pt-1 border-t border-slate-900">
-                        <button onclick="triggerOpponentMarch(${index})" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
-                            <i class="fa-solid fa-play mr-1"></i> March Started Now
-                        </button>
-                        <span id="op-timer-${index}" class="mono font-bold text-red-400 text-xs">--:--</span>
+                        ${isRunning ? `
+                            <button onclick="cancelOpponentRally(${index})" class="bg-slate-800 hover:bg-red-900/60 text-red-400 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition flex items-center">
+                                <i class="fa-solid fa-ban mr-1"></i> Cancel Rally
+                            </button>
+                        ` : `
+                            <button onclick="triggerOpponentMarch(${index})" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition flex items-center">
+                                <i class="fa-solid fa-play mr-1"></i> Rally Started Now
+                            </button>
+                        `}
+                        <div class="text-right">
+                            <span id="op-timer-${index}" class="mono font-bold text-red-400 text-xs">--:--</span>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1221,8 +1296,17 @@
         function triggerOpponentMarch(index) {
             if (userRole !== 'admin') return;
             const marchSec = parseMmSsToSeconds(opponents[index].march);
+            // Adds 5 min (300 seconds) rally prep to march time
+            const totalSec = RALLY_PREP_SECONDS + marchSec;
             const now = new Date();
-            opponents[index].etaUtc = new Date(now.getTime() + (marchSec * 1000));
+            opponents[index].etaUtc = new Date(now.getTime() + (totalSec * 1000));
+            renderOpponents();
+            broadcastFullState();
+        }
+
+        function cancelOpponentRally(index) {
+            if (userRole !== 'admin') return;
+            opponents[index].etaUtc = null;
             renderOpponents();
             broadcastFullState();
         }
@@ -1235,7 +1319,7 @@
                 if (op.etaUtc) {
                     const diffSec = Math.round((op.etaUtc.getTime() - now.getTime()) / 1000);
                     if (diffSec > 0) {
-                        timerEl.innerText = formatMmSs(diffSec);
+                        timerEl.innerText = '-' + formatMmSs(diffSec);
                         timerEl.className = "mono font-bold text-red-400 text-xs";
                     } else {
                         timerEl.innerText = "IMPACT!";
