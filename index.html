@@ -13,6 +13,7 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        /* Lock styling for members */
         .member-locked {
             pointer-events: none !important;
             opacity: 0.75 !important;
@@ -21,7 +22,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <!-- TOP BAR -->
+    <!-- TOP BAR: Room Security, Role Badge, Credits & Live UTC Clock -->
     <div>
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-2.5 shadow-md">
             <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -38,17 +39,17 @@
                 <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg p-1 space-x-1.5 text-xs">
                     <button onclick="openRoomModal()" class="flex items-center space-x-1.5 px-2 py-1 bg-slate-900 hover:bg-slate-800 rounded text-slate-200 transition">
                         <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-red-500"></span>
-                        <span class="font-bold" id="currentRoomDisplay">Room: ----</span>
+                        <span class="font-bold" id="currentRoomDisplay">Room: Alpha</span>
                         <i class="fa-solid fa-gear text-[10px] text-slate-400"></i>
                     </button>
 
-                    <!-- Role Badge -->
+                    <!-- User Role Badge -->
                     <div id="roleBadgeContainer" class="flex items-center">
-                        <!-- Populated by JS -->
+                        <!-- Populated by JS: ADMIN or VIEWER -->
                     </div>
 
-                    <!-- Invite Button -->
-                    <button onclick="openInviteModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded transition font-bold flex items-center">
+                    <!-- Invite Dropdown Button -->
+                    <button onclick="openInviteModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded transition font-bold flex items-center">
                         <i class="fa-solid fa-share-nodes mr-1"></i> Invite
                     </button>
                 </div>
@@ -66,10 +67,12 @@
             </div>
         </header>
 
-        <!-- TARGET TABS (Main Target, Turrets, Counter) -->
+        <!-- HOLDINGS / TARGET TABS (Main Target, Turret 1, Counter, etc.) -->
         <nav class="bg-slate-900/90 border-b border-slate-800 px-4 py-2">
             <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
-                <div id="holdingsTabs" class="flex items-center space-x-1.5"></div>
+                <div id="holdingsTabs" class="flex items-center space-x-1.5">
+                    <!-- Dynamic tabs -->
+                </div>
                 <button id="addHoldingBtn" onclick="addNewHolding()" class="flex-shrink-0 bg-slate-800 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-bold transition flex items-center">
                     <i class="fa-solid fa-plus mr-1"></i> Add Holding
                 </button>
@@ -96,7 +99,7 @@
                         </div>
                     </div>
                     
-                    <!-- Live UTC Clock under question -->
+                    <!-- Live UTC Clock -->
                     <div class="flex items-center justify-between bg-slate-950 border border-amber-500/30 rounded-lg px-4 py-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -105,7 +108,7 @@
                         <span id="utcClock" class="mono text-amber-300 font-bold text-lg md:text-xl tracking-wider">--:--:-- UTC</span>
                     </div>
 
-                    <!-- Delay presets & custom typing -->
+                    <!-- Delay presets & custom typing (Disabled for non-admins) -->
                     <div id="rallyDelayControls" class="space-y-2 pt-1">
                         <label class="text-[11px] font-semibold text-slate-400 uppercase">Select Delay or Type Minutes:</label>
                         <div class="flex flex-wrap items-center gap-2">
@@ -158,7 +161,7 @@
                     <div id="leadsList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 3. PLAIN TEXT OUTPUT FOR CHAT -->
+                <!-- 3. PLAIN TEXT OUTPUT FOR IN-GAME CHAT -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
                         <div>
@@ -183,7 +186,7 @@
 
             </section>
 
-            <!-- RIGHT COLUMN: Countdown Queue & Opponent Radar (5 Cols) -->
+            <!-- RIGHT COLUMN: Active Targets Timetable & Shared Opponent Radar (5 Cols) -->
             <aside class="lg:col-span-5 space-y-5">
 
                 <!-- SCHEDULED DISPLAY -->
@@ -271,32 +274,24 @@
                 <button onclick="closeRoomModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Quick Joven Preset Button (Loads Member Pass 1488, Keeps Admin Pin Secret) -->
-            <button onclick="loadJovenRoomPreset()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center transition">
-                <i class="fa-solid fa-star text-amber-400 mr-1.5"></i> Load #ElJoven Official Room [S1488]
-            </button>
-
             <div class="space-y-3 text-xs">
                 <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-slate-400 font-semibold uppercase text-[10px]">Room Code [1111 - 9999]</label>
-                        <button onclick="generateNewRandomRoom()" class="text-[10px] text-amber-400 hover:underline">🎲 New Random</button>
-                    </div>
-                    <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. 5824">
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Code</label>
+                    <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. WAR-ALPHA">
                 </div>
                 <div>
                     <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Member Password</label>
-                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for members">
+                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for everyone">
                 </div>
                 <div class="pt-2 border-t border-slate-800">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-amber-400 font-bold uppercase text-[10px]">
                             <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Admin / Caller PIN
                         </label>
-                        <span class="text-[10px] text-slate-500 font-mono">Required to Edit</span>
+                        <span class="text-[10px] text-slate-500 font-mono">Needed to Edit</span>
                     </div>
                     <input type="password" id="modalAdminPin" class="w-full bg-slate-950 border border-amber-500/50 px-3 py-2 rounded text-amber-300 font-mono outline-none focus:border-amber-500" placeholder="Enter Admin PIN">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to join as Member (View-Only).</span>
+                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank if joining as Member (View-Only).</span>
                 </div>
             </div>
 
@@ -361,12 +356,12 @@
                 name: "Main Target",
                 startMinutes: 3,
                 leads: [
-                    { name: "Joven", march: "00:15", gap: 0 },
+                    { name: "Kilam", march: "00:15", gap: 1 },
                     { name: "Toutoutown", march: "00:25", gap: 0 },
-                    { name: "Trony", march: "00:35", gap: 0 },
-                    { name: "Kilam", march: "00:45", gap: 0 },
-                    { name: "Rob", march: "01:15", gap: 0 },
-                    { name: "Kenrick", march: "00:55", gap: 0 }
+                    { name: "Kenrick", march: "00:35", gap: 0 },
+                    { name: "Rob", march: "00:45", gap: 0 },
+                    { name: "Trony", march: "00:55", gap: 0 },
+                    { name: "ElJoven", march: "00:55", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -388,15 +383,10 @@
         ];
 
         // Security & Roles State
-        let roomCode = "";
+        let roomCode = "Alpha";
         let roomPass = "1234";
-        let roomAdminPin = "9999";
-        let userRole = "admin";
-
-        // Special "Joven" Presets
-        const JOVEN_ROOM = "Joven";
-        const JOVEN_MEMBER_PASS = "1488";
-        const JOVEN_ADMIN_PIN = "Joven1488";
+        let roomAdminPin = "9999"; // Set default room admin pin
+        let userRole = "admin";    // 'admin' or 'member'
 
         // Unique Client Identifier
         const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
@@ -406,27 +396,11 @@
         let broadcastTimer = null;
 
         function debouncedBroadcast() {
-            if (userRole !== 'admin') return;
+            if (userRole !== 'admin') return; // Only admins broadcast updates
             clearTimeout(broadcastTimer);
             broadcastTimer = setTimeout(() => {
                 broadcastFullState();
             }, 500);
-        }
-
-        // --- Random Code Generator [1111 - 9999] ---
-        function getRandomRoomCode() {
-            return Math.floor(1111 + Math.random() * (9999 - 1111 + 1)).toString();
-        }
-
-        function generateNewRandomRoom() {
-            document.getElementById('modalRoomCode').value = getRandomRoomCode();
-        }
-
-        // Quick Preset for Special Joven Room (Prefills member pass 1488, hides admin PIN)
-        function loadJovenRoomPreset() {
-            document.getElementById('modalRoomCode').value = JOVEN_ROOM;
-            document.getElementById('modalRoomPass').value = JOVEN_MEMBER_PASS;
-            document.getElementById('modalAdminPin').value = ""; // Kept secret & blank!
         }
 
         // --- Role & Permissions Enforcement ---
@@ -439,6 +413,7 @@
             const isAdmin = userRole === 'admin';
             const badgeContainer = document.getElementById('roleBadgeContainer');
 
+            // 1. Role Badge in Header
             if (isAdmin) {
                 badgeContainer.innerHTML = `
                     <span class="bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold px-2 py-0.5 rounded text-[11px] flex items-center">
@@ -453,22 +428,27 @@
                 `;
             }
 
+            // 2. Lock / Unlock Inputs
             document.getElementById('holdingNameInput').disabled = !isAdmin;
             document.getElementById('startMinutesInput').disabled = !isAdmin;
 
+            // Preset Buttons
             document.querySelectorAll('.preset-btn').forEach(btn => {
                 btn.disabled = !isAdmin;
                 if (!isAdmin) btn.classList.add('opacity-40', 'cursor-not-allowed');
                 else btn.classList.remove('opacity-40', 'cursor-not-allowed');
             });
 
+            // Add Buttons
             document.getElementById('addLeadBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('addHoldingBtn').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('addOpponentBtn').style.display = isAdmin ? 'block' : 'none';
 
+            // Start Countdown Action Button
             document.getElementById('startRallyBtn').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('memberLockedBanner').style.display = isAdmin ? 'none' : 'block';
 
+            // Leads table inputs lock
             renderCurrentHolding();
             renderOpponents();
         }
@@ -617,7 +597,7 @@
         }
 
         function handleIncomingSync(data) {
-            if (!data || data.senderId === myClientId) return;
+            if (!data || data.senderId === myClientId) return; // Drop own echoes
 
             if (data.type === 'REQ_SYNC') {
                 if (userRole === 'admin') broadcastFullState();
@@ -669,8 +649,7 @@
         function openRoomModal() {
             document.getElementById('modalRoomCode').value = roomCode;
             document.getElementById('modalRoomPass').value = roomPass;
-            // Never expose Joven Admin PIN even when reopening modal
-            document.getElementById('modalAdminPin').value = (userRole === 'admin' && roomCode !== JOVEN_ROOM) ? roomAdminPin : '';
+            document.getElementById('modalAdminPin').value = (userRole === 'admin') ? roomAdminPin : '';
             document.getElementById('roomModal').classList.remove('hidden');
         }
 
@@ -679,48 +658,17 @@
         }
 
         function applyRoomSettings() {
-            const enteredCode = document.getElementById('modalRoomCode').value.trim() || getRandomRoomCode();
-            const enteredPass = document.getElementById('modalRoomPass').value.trim() || "1234";
+            roomCode = document.getElementById('modalRoomCode').value.trim() || "Alpha";
+            roomPass = document.getElementById('modalRoomPass').value.trim() || "1234";
             const enteredAdminPin = document.getElementById('modalAdminPin').value.trim();
 
-            const isJoven = enteredCode.toLowerCase() === JOVEN_ROOM.toLowerCase();
-
-            if (isJoven) {
-                // Enforce Special Joven Credentials
-                roomCode = JOVEN_ROOM;
-                roomPass = JOVEN_MEMBER_PASS;
-                roomAdminPin = JOVEN_ADMIN_PIN;
-
-                if (enteredAdminPin === JOVEN_ADMIN_PIN) {
-                    userRole = "admin";
-                } else if (enteredPass === JOVEN_MEMBER_PASS) {
-                    userRole = "member";
-                } else {
-                    alert("Invalid password for #ElJoven room! Check member password (1488) or Admin PIN.");
-                    return;
-                }
+            if (enteredAdminPin === roomAdminPin) {
+                userRole = "admin";
+            } else if (enteredAdminPin === "") {
+                userRole = "member";
             } else {
-                // User's own room
-                const previousRoom = roomCode;
-                roomCode = enteredCode;
-
-                if (enteredCode === previousRoom && userRole === 'admin') {
-                    roomPass = enteredPass;
-                    if (enteredAdminPin) roomAdminPin = enteredAdminPin;
-                } else {
-                    if (enteredAdminPin && (enteredAdminPin === roomAdminPin || roomAdminPin === "9999")) {
-                        userRole = "admin";
-                        roomPass = enteredPass;
-                        roomAdminPin = enteredAdminPin;
-                    } else if (!enteredAdminPin) {
-                        userRole = "member";
-                        roomPass = enteredPass;
-                    } else {
-                        alert("Entered Admin PIN does not match. Joining as Member (View-Only).");
-                        userRole = "member";
-                        roomPass = enteredPass;
-                    }
-                }
+                alert("Incorrect Admin PIN! Entering as Member (View-Only).");
+                userRole = "member";
             }
 
             closeRoomModal();
@@ -748,40 +696,18 @@
             });
         }
 
-        // --- Initialize Page & URL Params ---
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const r = params.get('room');
             const p = params.get('pass');
             const a = params.get('admin');
 
-            if (r) {
-                roomCode = r;
-                const isJoven = roomCode.toLowerCase() === JOVEN_ROOM.toLowerCase();
-
-                if (isJoven) {
-                    roomPass = JOVEN_MEMBER_PASS;
-                    roomAdminPin = JOVEN_ADMIN_PIN;
-                    if (a === JOVEN_ADMIN_PIN) {
-                        userRole = "admin";
-                    } else {
-                        userRole = "member";
-                    }
-                } else {
-                    roomPass = p || "1234";
-                    if (a) {
-                        roomAdminPin = a;
-                        userRole = "admin";
-                    } else {
-                        userRole = "member";
-                    }
-                }
-            } else {
-                // Direct visit: Assign random [1111 - 9999] room and make them ADMIN
-                roomCode = getRandomRoomCode();
-                roomPass = "1234";
-                roomAdminPin = "9999";
+            if (r) roomCode = r;
+            if (p) roomPass = p;
+            if (a && a === roomAdminPin) {
                 userRole = "admin";
+            } else if (r) {
+                userRole = "member"; // Joined via shared room link without admin pin
             }
         }
 
@@ -822,6 +748,7 @@
         function renderHoldingTabs() {
             const container = document.getElementById('holdingsTabs');
             container.innerHTML = '';
+
             const isAdmin = userRole === 'admin';
 
             holdings.forEach((h, index) => {
