@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>King's Shot — Rally Synchronizer</title>
+    <title>King's Shot — Tactical Multi-Rally Sync</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- MQTT over WebSockets for Real-Time Zero-Config Sync -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -14,60 +17,83 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Top Navigation & Room Switcher -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-2.5">
-                <i class="fa-solid fa-crosshairs text-amber-400 text-xl"></i>
-                <span class="font-bold tracking-wider text-white text-base md:text-lg uppercase">King's Shot Coordinator</span>
-            </div>
-
-            <!-- Custom Room Bar -->
-            <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg p-1 space-x-1 text-xs">
-                <span class="text-slate-400 font-bold px-2 flex items-center">
-                    <i class="fa-solid fa-door-open mr-1.5 text-amber-400"></i> Room:
-                </span>
-                <input type="text" id="roomInput" value="Default" class="bg-slate-900 border border-slate-700 text-amber-300 font-semibold px-2 py-1 rounded outline-none w-28 text-center">
-                <button onclick="switchRoom()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded text-slate-200 transition font-semibold">
-                    Load
-                </button>
-                <button onclick="shareRoomLink()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded transition font-bold flex items-center">
-                    <i class="fa-solid fa-share-nodes mr-1"></i> Share Link
-                </button>
-            </div>
-
+    <!-- TOP BAR: Room Security, Voice & UTC Clock -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-2.5 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            
             <div class="flex items-center space-x-2">
-                <button onclick="toggleVoice()" id="voiceToggleBtn" class="flex items-center space-x-1.5 text-xs bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 px-3 py-1.5 rounded transition hover:bg-emerald-900/60 font-semibold">
+                <i class="fa-solid fa-crosshairs text-amber-400 text-lg"></i>
+                <span class="font-bold tracking-wider text-white text-sm sm:text-base uppercase">King's Shot Sync</span>
+            </div>
+
+            <!-- Room & Password Controller -->
+            <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg p-1 space-x-1.5 text-xs">
+                <button onclick="openRoomModal()" class="flex items-center space-x-1.5 px-2 py-1 bg-slate-900 hover:bg-slate-800 rounded text-slate-200 transition">
+                    <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span class="font-bold" id="currentRoomDisplay">Room: Alpha</span>
+                    <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
+                </button>
+                <button onclick="shareInviteLink()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded transition font-bold flex items-center">
+                    <i class="fa-solid fa-share-nodes mr-1"></i> Invite
+                </button>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleVoice()" id="voiceToggleBtn" class="flex items-center space-x-1 text-xs bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 px-2.5 py-1 rounded transition font-semibold">
                     <i class="fa-solid fa-volume-high" id="voiceIcon"></i>
                     <span id="voiceText">Voice: ON</span>
                 </button>
+                <span class="text-xs bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1 rounded font-mono hidden sm:inline-block">
+                    Server: UTC
+                </span>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- HOLDINGS / TARGET TABS (Main Rally, Turret 1, Counter, etc.) -->
+    <nav class="bg-slate-900/90 border-b border-slate-800 px-4 py-2">
+        <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
+            <div id="holdingsTabs" class="flex items-center space-x-1.5">
+                <!-- Dynamically populated holding tabs -->
+            </div>
+            <button onclick="addNewHolding()" class="flex-shrink-0 bg-slate-800 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-bold transition flex items-center">
+                <i class="fa-solid fa-plus mr-1"></i> Add Holding (Turret / Counter)
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN INTERFACE -->
     <main class="max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-        <!-- LEFT COLUMN: Planner Controls (7 Cols) -->
+        <!-- LEFT COLUMN: Selected Holding Planner (7 Cols) -->
         <section class="lg:col-span-7 space-y-5">
 
-            <!-- 1. START TIME CONTROLLER & UTC CLOCK -->
+            <!-- 1. START TIME CONTROLLER & LIVE UTC CLOCK -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-                <div>
+                
+                <div class="flex justify-between items-center">
                     <h2 class="text-xs uppercase tracking-wider text-amber-400 font-bold flex items-center">
                         <i class="fa-solid fa-clock mr-1.5"></i> 1. When do you want to start rally?
                     </h2>
-                    
-                    <div class="mt-2.5 flex items-center justify-between bg-slate-950 border border-amber-500/30 rounded-lg px-4 py-2.5">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-xs text-slate-400 font-semibold uppercase">Current UTC Clock:</span>
-                        </div>
-                        <span id="utcClock" class="mono text-amber-300 font-bold text-lg md:text-xl tracking-wider">--:--:-- UTC</span>
+                    <!-- Target Name Edit -->
+                    <div class="flex items-center space-x-1">
+                        <span class="text-[10px] text-slate-400 uppercase font-semibold">Target:</span>
+                        <input type="text" id="holdingNameInput" onchange="renameCurrentHolding(this.value)" 
+                            class="bg-slate-950 border border-slate-700 px-2 py-0.5 rounded text-xs font-bold text-amber-300 outline-none w-36 text-center">
                     </div>
                 </div>
+                
+                <!-- Live UTC Clock directly below the question -->
+                <div class="flex items-center justify-between bg-slate-950 border border-amber-500/30 rounded-lg px-4 py-2.5">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs text-slate-400 font-semibold uppercase">Current UTC Clock:</span>
+                    </div>
+                    <span id="utcClock" class="mono text-amber-300 font-bold text-lg md:text-xl tracking-wider">--:--:-- UTC</span>
+                </div>
 
-                <!-- Delay Selectors -->
+                <!-- Delay presets & custom typing -->
                 <div class="space-y-2 pt-1">
                     <label class="text-[11px] font-semibold text-slate-400 uppercase">Select Delay or Type Minutes:</label>
                     <div class="flex flex-wrap items-center gap-2">
@@ -87,23 +113,25 @@
                     </div>
                 </div>
 
+                <!-- START RALLY COUNTDOWN BUTTON (BROADCASTS TO ALL ALLIANCE PEERS) -->
                 <button onclick="startRallyCountdown()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm py-3 rounded-lg shadow-lg hover:shadow-amber-500/20 transition flex items-center justify-center tracking-wider uppercase">
-                    <i class="fa-solid fa-play mr-2"></i> Start Rally Countdown
+                    <i class="fa-solid fa-tower-broadcast mr-2"></i> Broadcast & Start Rally Countdown
                 </button>
             </div>
 
-            <!-- 2. LEADS SETUP -->
+            <!-- 2. RALLY LEADS SETUP (MM:SS & GAP) -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                     <div>
                         <h2 class="text-xs uppercase tracking-wider text-slate-300 font-bold">2. Friendly Rally Leads</h2>
-                        <span class="text-[11px] text-slate-500">March in MM:SS &bull; Gap in Sec &bull; Includes 5m Rally Wait</span>
+                        <span class="text-[11px] text-slate-500">March in MM:SS &bull; Gap in Sec &bull; Includes 5m Rally Prep</span>
                     </div>
                     <button onclick="addLead()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded text-xs font-semibold transition">
                         <i class="fa-solid fa-plus mr-1"></i> Add Lead
                     </button>
                 </div>
 
+                <!-- Headers -->
                 <div class="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-400 px-1">
                     <span class="col-span-5">Lead Name</span>
                     <span class="col-span-4 text-center">March Time (MM:SS)</span>
@@ -114,7 +142,7 @@
                 <div id="leadsList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- 3. PLAIN TEXT OUTPUT -->
+            <!-- 3. PLAIN TEXT OUTPUT FOR IN-GAME CHAT -->
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
                     <div>
@@ -139,55 +167,55 @@
 
         </section>
 
-        <!-- RIGHT COLUMN: Countdown & Opponent Radar (5 Cols) -->
+        <!-- RIGHT COLUMN: Active Targets Timetable & Shared Opponent Radar (5 Cols) -->
         <aside class="lg:col-span-5 space-y-5">
 
-            <!-- SCHEDULED DISPLAY -->
+            <!-- SCHEDULED DISPLAY FOR ACTIVE TARGETS -->
             <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-5 shadow-sm space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                     <div>
                         <h2 class="text-xs uppercase tracking-wider text-amber-400 font-bold flex items-center">
-                            <i class="fa-solid fa-stopwatch mr-1.5"></i> Next Rally Schedule & Impacts
+                            <i class="fa-solid fa-stopwatch mr-1.5"></i> Active Schedule & Hit Timers
                         </h2>
-                        <span class="text-[10px] text-slate-400">Total Hit = Start + 5m Prep + March Time</span>
+                        <span class="text-[10px] text-slate-400">Total Hit = Start + 5m Prep + March</span>
                     </div>
                     <span id="scheduleStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase">
                         Standby
                     </span>
                 </div>
 
+                <!-- Next Up Lead Banner -->
                 <div class="bg-slate-950 border border-slate-800 p-4 rounded-lg text-center space-y-1">
                     <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold block">Next Lead Starting:</span>
+                    <div id="nextLeadTargetTag" class="text-xs font-bold text-amber-500 uppercase tracking-widest">--</div>
                     <div id="nextLeadName" class="text-lg font-bold text-white tracking-wide">--</div>
                     <div id="nextLeadTimer" class="mono text-3xl font-extrabold text-amber-400 tracking-wider">--:--</div>
                     <div id="nextLeadDetails" class="text-[11px] mono text-slate-400">Launch at: --:-- UTC &bull; Hits at: --:-- UTC</div>
                 </div>
 
+                <!-- All Targets Timetable Queue -->
                 <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue & Impact Times:</span>
-                        <span class="text-[10px] text-amber-400/80 font-mono">Launch &rarr; Impact (UTC)</span>
-                    </div>
-                    <div id="scheduledQueue" class="space-y-2 max-h-[240px] overflow-y-auto pr-1 text-xs">
-                        <div class="text-slate-500 italic text-center py-3">Press "Start Rally Countdown" to arm schedule</div>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue for Current Target:</span>
+                    <div id="scheduledQueue" class="space-y-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
+                        <div class="text-slate-500 italic text-center py-3">Press "Broadcast & Start" to trigger room countdown</div>
                     </div>
                 </div>
 
                 <div id="cancelContainer" class="hidden pt-1">
                     <button onclick="cancelSchedule()" class="w-full bg-slate-800 hover:bg-red-950/60 hover:text-red-400 text-slate-400 border border-slate-700 py-1.5 rounded text-xs font-semibold transition">
-                        Reset / Cancel Schedule
+                        Reset / Cancel Current Rally
                     </button>
                 </div>
             </div>
 
-            <!-- OPPONENT RADAR -->
+            <!-- SHARED OPPONENT MARCH RADAR -->
             <div class="bg-slate-900 border border-red-900/40 rounded-xl p-5 shadow-sm flex flex-col space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                     <div>
                         <h2 class="text-xs uppercase tracking-wider text-red-400 font-bold flex items-center">
                             <i class="fa-solid fa-shield-halved mr-1.5 text-red-500"></i> Opponent March Radar
                         </h2>
-                        <span class="text-[11px] text-slate-400">Track hostile hits & arrival times</span>
+                        <span class="text-[11px] text-slate-400">Synchronized live for all scouts in room</span>
                     </div>
                     <button onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
                         <i class="fa-solid fa-plus mr-1"></i> Add Enemy
@@ -201,83 +229,79 @@
 
     </main>
 
+    <!-- ROOM & PASSWORD MODAL -->
+    <div id="roomModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center">
+                    <i class="fa-solid fa-lock text-amber-400 mr-2"></i> Join / Switch War Room
+                </h3>
+                <button onclick="closeRoomModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Name / Code</label>
+                    <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. WAR-ALPHA">
+                </div>
+                <div>
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Password / PIN</label>
+                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Room Password">
+                    <span class="text-[10px] text-slate-500 mt-1 block">Teammates must enter this exact code and password to sync.</span>
+                </div>
+            </div>
+
+            <div class="pt-2 flex space-x-2">
+                <button onclick="applyRoomSettings()" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded transition">
+                    Connect & Sync
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ENGINE -->
     <script>
-        const RALLY_PREP_SECONDS = 300;
-        let voiceEnabled = true;
-        let currentRoom = "Default";
-
-        let leads = [
-            { name: "Kilam", march: "01:15", gap: 0 },
-            { name: "GM", march: "00:45", gap: 0 }
+        const RALLY_PREP_SECONDS = 300; // 5 min rally prep
+        
+        // Multi-Holding State
+        let holdings = [
+            {
+                id: "main-center",
+                name: "Main Target",
+                startMinutes: 3,
+                leads: [
+                    { name: "Kilam", march: "01:15", gap: 0 },
+                    { name: "GM", march: "00:45", gap: 0 }
+                ],
+                scheduledRally: null
+            },
+            {
+                id: "turret-1",
+                name: "Turret 1",
+                startMinutes: 3,
+                leads: [
+                    { name: "Lead 2", march: "01:00", gap: 0 }
+                ],
+                scheduledRally: null
+            }
         ];
+        let activeHoldingIndex = 0;
 
+        // Opponents State
         let opponents = [
-            { name: "Enemy Lead 1", march: "02:30", etaUtc: null }
+            { name: "Enemy Alpha", march: "02:30", etaUtc: null }
         ];
 
-        let scheduledRally = null;
+        // Room & MQTT Real-Time State
+        let roomCode = "Alpha";
+        let roomPass = "1234";
+        let mqttClient = null;
+        let currentTopic = "";
+        let isBroadcasting = false;
 
-        // --- Custom Room System ---
-        function initRoomFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const roomParam = params.get('room');
-            const dataParam = params.get('data');
+        // Voice Engine State
+        let voiceEnabled = true;
 
-            if (roomParam) {
-                currentRoom = roomParam;
-                document.getElementById('roomInput').value = currentRoom;
-            }
-
-            if (dataParam) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
-                    if (parsed.leads) leads = parsed.leads;
-                    if (parsed.opponents) opponents = parsed.opponents;
-                } catch(e) {
-                    console.error("Invalid shared data", e);
-                }
-            } else {
-                loadRoomData(currentRoom);
-            }
-        }
-
-        function saveRoomData(room) {
-            localStorage.setItem(`kingshot_room_${room}`, JSON.stringify({ leads, opponents }));
-        }
-
-        function loadRoomData(room) {
-            const saved = localStorage.getItem(`kingshot_room_${room}`);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    leads = parsed.leads || leads;
-                    opponents = parsed.opponents || opponents;
-                } catch(e) {}
-            }
-        }
-
-        function switchRoom() {
-            const roomName = document.getElementById('roomInput').value.trim() || "Default";
-            saveRoomData(currentRoom); // save current
-            currentRoom = roomName;
-            loadRoomData(currentRoom);
-            renderLeads();
-            renderOpponents();
-            calculateSync();
-            speak(`Switched to room ${currentRoom}`);
-        }
-
-        function shareRoomLink() {
-            saveRoomData(currentRoom);
-            const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ leads, opponents }))));
-            const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(currentRoom)}&data=${payload}`;
-            
-            navigator.clipboard.writeText(url).then(() => {
-                alert(`Room "${currentRoom}" link copied to clipboard! Share it with your alliance members.`);
-            });
-        }
-
-        // --- Voice Engine ---
         function speak(text, rate = 1.0) {
             if (!voiceEnabled || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
@@ -293,19 +317,167 @@
             const text = document.getElementById('voiceText');
 
             if (voiceEnabled) {
-                btn.className = "flex items-center space-x-1.5 text-xs bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 px-3 py-1.5 rounded transition font-semibold";
+                btn.className = "flex items-center space-x-1 text-xs bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 px-2.5 py-1 rounded transition font-semibold";
                 icon.className = "fa-solid fa-volume-high";
                 text.innerText = "Voice: ON";
                 speak("Voice enabled");
             } else {
                 window.speechSynthesis.cancel();
-                btn.className = "flex items-center space-x-1.5 text-xs bg-slate-800 border border-slate-700 text-slate-400 px-3 py-1.5 rounded transition font-semibold";
+                btn.className = "flex items-center space-x-1 text-xs bg-slate-800 border border-slate-700 text-slate-400 px-2.5 py-1 rounded transition font-semibold";
                 icon.className = "fa-solid fa-volume-xmark";
                 text.innerText = "Voice: OFF";
             }
         }
 
-        // --- Master Clock ---
+        // --- SHA-256 for Topic Obfuscation from Room + Password ---
+        async function getTopicHash(room, pass) {
+            const raw = `${room.trim().toLowerCase()}:::${pass.trim()}`;
+            const msgUint8 = new TextEncoder().encode(raw);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 24);
+        }
+
+        // --- MQTT WebSockets Connection ---
+        async function connectMqtt() {
+            if (mqttClient) {
+                try { mqttClient.end(); } catch(e) {}
+            }
+
+            const topicHash = await getTopicHash(roomCode, roomPass);
+            currentTopic = `kingshot/rooms/${topicHash}`;
+
+            document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
+            document.getElementById('currentRoomDisplay').innerText = `Room: ${roomCode}`;
+
+            // Connects to high-speed public WebSockets MQTT broker
+            mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+                clientId: 'ks_' + Math.random().toString(16).substr(2, 8),
+                clean: true,
+                reconnectPeriod: 2500
+            });
+
+            mqttClient.on('connect', () => {
+                document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-emerald-500";
+                mqttClient.subscribe(currentTopic);
+                // Request current room state from any active peer
+                broadcastMessage({ type: 'REQ_SYNC' });
+            });
+
+            mqttClient.on('message', (topic, message) => {
+                if (topic !== currentTopic) return;
+                try {
+                    const data = JSON.parse(message.toString());
+                    handleIncomingSync(data);
+                } catch(e) {
+                    console.error("MQTT parsing error", e);
+                }
+            });
+
+            mqttClient.on('error', () => {
+                document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-red-500";
+            });
+        }
+
+        function broadcastMessage(data) {
+            if (!mqttClient || !mqttClient.connected) return;
+            isBroadcasting = true;
+            mqttClient.publish(currentTopic, JSON.stringify(data));
+            setTimeout(() => { isBroadcasting = false; }, 100);
+        }
+
+        function broadcastFullState() {
+            broadcastMessage({
+                type: 'FULL_STATE',
+                holdings: holdings,
+                opponents: opponents,
+                activeHoldingIndex: activeHoldingIndex
+            });
+        }
+
+        function handleIncomingSync(data) {
+            if (isBroadcasting) return; // Ignore self-messages
+
+            if (data.type === 'REQ_SYNC') {
+                // Another teammate joined, send them our state
+                broadcastFullState();
+            } else if (data.type === 'FULL_STATE') {
+                if (data.holdings) {
+                    // Restore timestamps
+                    holdings = data.holdings.map(h => {
+                        if (h.scheduledRally && h.scheduledRally.items) {
+                            h.scheduledRally.items = h.scheduledRally.items.map(item => ({
+                                ...item,
+                                launchDate: new Date(item.launchDate),
+                                hitDate: new Date(item.hitDate)
+                            }));
+                        }
+                        return h;
+                    });
+                }
+                if (data.opponents) {
+                    opponents = data.opponents.map(op => ({
+                        ...op,
+                        etaUtc: op.etaUtc ? new Date(op.etaUtc) : null
+                    }));
+                }
+                renderHoldingTabs();
+                renderCurrentHolding();
+                renderOpponents();
+            } else if (data.type === 'START_RALLY') {
+                const targetHolding = holdings.find(h => h.id === data.holdingId);
+                if (targetHolding) {
+                    targetHolding.scheduledRally = {
+                        items: data.items.map(i => ({
+                            ...i,
+                            launchDate: new Date(i.launchDate),
+                            hitDate: new Date(i.hitDate)
+                        }))
+                    };
+                    speak(`Rally countdown initiated for ${targetHolding.name}`);
+                    renderCurrentHolding();
+                }
+            } else if (data.type === 'CANCEL_RALLY') {
+                const targetHolding = holdings.find(h => h.id === data.holdingId);
+                if (targetHolding) {
+                    targetHolding.scheduledRally = null;
+                    renderCurrentHolding();
+                }
+            }
+        }
+
+        // --- Room Modal Controls ---
+        function openRoomModal() {
+            document.getElementById('modalRoomCode').value = roomCode;
+            document.getElementById('modalRoomPass').value = roomPass;
+            document.getElementById('roomModal').classList.remove('hidden');
+        }
+
+        function closeRoomModal() {
+            document.getElementById('roomModal').classList.add('hidden');
+        }
+
+        function applyRoomSettings() {
+            roomCode = document.getElementById('modalRoomCode').value.trim() || "Alpha";
+            roomPass = document.getElementById('modalRoomPass').value.trim() || "1234";
+            closeRoomModal();
+            connectMqtt();
+        }
+
+        function shareInviteLink() {
+            const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert(`Invite link for Room "${roomCode}" copied!\\nPassword: "${roomPass}"\\nShare both with your alliance.`);
+            });
+        }
+
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const r = params.get('room');
+            if (r) roomCode = r;
+        }
+
+        // --- Master UTC Clock ---
         function updateClock() {
             const now = new Date();
             const h = String(now.getUTCHours()).padStart(2, '0');
@@ -338,17 +510,74 @@
             return `${m}:${s}`;
         }
 
-        function setMinutes(val) {
-            document.getElementById('startMinutesInput').value = val;
-            calculateSync();
+        // --- Holdings (Targets) Management ---
+        function renderHoldingTabs() {
+            const container = document.getElementById('holdingsTabs');
+            container.innerHTML = '';
+
+            holdings.forEach((h, index) => {
+                const isActive = index === activeHoldingIndex;
+                const tab = document.createElement('div');
+                tab.className = `flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
+                    isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`;
+                tab.innerHTML = `
+                    <span onclick="selectHolding(${index})">${h.name}</span>
+                    ${holdings.length > 1 ? `<button onclick="removeHolding(event, ${index})" class="text-slate-400 hover:text-red-500 pl-1"><i class="fa-solid fa-xmark text-[10px]"></i></button>` : ''}
+                `;
+                container.appendChild(tab);
+            });
         }
 
-        // --- Leads UI ---
-        function renderLeads() {
+        function selectHolding(index) {
+            activeHoldingIndex = index;
+            renderHoldingTabs();
+            renderCurrentHolding();
+        }
+
+        function addNewHolding() {
+            const id = 'target-' + Date.now();
+            const count = holdings.length + 1;
+            holdings.push({
+                id: id,
+                name: `Turret ${count}`,
+                startMinutes: 3,
+                leads: [{ name: `Lead ${count}`, march: "01:00", gap: 0 }],
+                scheduledRally: null
+            });
+            activeHoldingIndex = holdings.length - 1;
+            renderHoldingTabs();
+            renderCurrentHolding();
+            broadcastFullState();
+        }
+
+        function removeHolding(e, index) {
+            e.stopPropagation();
+            if (holdings.length <= 1) return;
+            holdings.splice(index, 1);
+            if (activeHoldingIndex >= holdings.length) activeHoldingIndex = holdings.length - 1;
+            renderHoldingTabs();
+            renderCurrentHolding();
+            broadcastFullState();
+        }
+
+        function renameCurrentHolding(val) {
+            holdings[activeHoldingIndex].name = val.trim() || "Target";
+            renderHoldingTabs();
+            calculateSync();
+            broadcastFullState();
+        }
+
+        // --- Leads UI for Active Holding ---
+        function renderCurrentHolding() {
+            const current = holdings[activeHoldingIndex];
+            document.getElementById('holdingNameInput').value = current.name;
+            document.getElementById('startMinutesInput').value = current.startMinutes;
+
             const container = document.getElementById('leadsList');
             container.innerHTML = '';
 
-            leads.forEach((lead, index) => {
+            current.leads.forEach((lead, index) => {
                 const row = document.createElement('div');
                 row.className = "grid grid-cols-12 gap-2 items-center bg-slate-950 p-2 rounded-lg border border-slate-800";
                 row.innerHTML = `
@@ -372,35 +601,45 @@
                 `;
                 container.appendChild(row);
             });
+
+            calculateSync();
+        }
+
+        function setMinutes(val) {
+            document.getElementById('startMinutesInput').value = val;
+            holdings[activeHoldingIndex].startMinutes = val;
+            calculateSync();
+            broadcastFullState();
         }
 
         function addLead() {
-            leads.push({ name: `Lead ${leads.length + 1}`, march: "01:00", gap: 0 });
-            saveRoomData(currentRoom);
-            renderLeads();
-            calculateSync();
+            const current = holdings[activeHoldingIndex];
+            current.leads.push({ name: `Lead ${current.leads.length + 1}`, march: "01:00", gap: 0 });
+            renderCurrentHolding();
+            broadcastFullState();
         }
 
         function removeLead(index) {
-            leads.splice(index, 1);
-            saveRoomData(currentRoom);
-            renderLeads();
-            calculateSync();
+            const current = holdings[activeHoldingIndex];
+            current.leads.splice(index, 1);
+            renderCurrentHolding();
+            broadcastFullState();
         }
 
         function updateLead(index, field, value) {
-            leads[index][field] = value;
-            saveRoomData(currentRoom);
+            holdings[activeHoldingIndex].leads[index][field] = value;
             calculateSync();
+            broadcastFullState();
         }
 
         // --- Core Rally Calculation ---
-        function calculateRallyTimetable(baseStartTime) {
-            if (leads.length === 0) return [];
-            const diffs = leads.map(l => parseMmSsToSeconds(l.march) - (parseInt(l.gap) || 0));
+        function calculateRallyTimetable(baseStartTime, targetHolding) {
+            if (!targetHolding || targetHolding.leads.length === 0) return [];
+
+            const diffs = targetHolding.leads.map(l => parseMmSsToSeconds(l.march) - (parseInt(l.gap) || 0));
             const maxDiff = Math.max(...diffs);
 
-            const calculated = leads.map(lead => {
+            const calculated = targetHolding.leads.map(lead => {
                 const marchSec = parseMmSsToSeconds(lead.march);
                 const gapSec = parseInt(lead.gap) || 0;
                 const offsetSec = maxDiff - (marchSec - gapSec);
@@ -409,6 +648,7 @@
                 const hitDate = new Date(launchDate.getTime() + ((RALLY_PREP_SECONDS + marchSec) * 1000));
 
                 return {
+                    targetName: targetHolding.name,
                     name: lead.name,
                     launchDate: launchDate,
                     launchFormatted: formatUtcMmSs(launchDate),
@@ -424,18 +664,23 @@
         }
 
         function calculateSync() {
-            if (leads.length === 0) {
+            const current = holdings[activeHoldingIndex];
+            if (!current || current.leads.length === 0) {
                 document.getElementById('plainTextOutput').value = "No leads configured.";
                 return;
             }
 
             const mins = parseFloat(document.getElementById('startMinutesInput').value) || 0;
+            current.startMinutes = mins;
             const now = new Date();
             const firstLaunch = new Date(now.getTime() + (mins * 60 * 1000));
 
-            const timetable = calculateRallyTimetable(firstLaunch);
-            const lines = ["Next Rally at"];
-            timetable.forEach(t => lines.push(t.name + " - " + t.launchFormatted));
+            const timetable = calculateRallyTimetable(firstLaunch, current);
+
+            const lines = [`[${current.name}] Next Rally at`];
+            timetable.forEach(t => {
+                lines.push(t.name + " - " + t.launchFormatted);
+            });
 
             document.getElementById('plainTextOutput').value = lines.join(String.fromCharCode(10));
         }
@@ -449,41 +694,52 @@
             });
         }
 
-        // --- Schedule & Voice Cues ---
+        // --- Start & Cancel Broadcast ---
         function startRallyCountdown() {
-            if (leads.length === 0) return;
+            const current = holdings[activeHoldingIndex];
+            if (!current || current.leads.length === 0) return;
+
             calculateSync();
             const mins = parseFloat(document.getElementById('startMinutesInput').value) || 0;
             const now = new Date();
             const firstLaunch = new Date(now.getTime() + (mins * 60 * 1000));
 
-            scheduledRally = { items: calculateRallyTimetable(firstLaunch) };
+            const timetable = calculateRallyTimetable(firstLaunch, current);
+            current.scheduledRally = { items: timetable };
 
-            document.getElementById('scheduleStatusBadge').innerText = "COUNTDOWN ACTIVE";
-            document.getElementById('scheduleStatusBadge').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse";
-            document.getElementById('cancelContainer').classList.remove('hidden');
+            speak(`Countdown initiated for ${current.name}.`);
 
-            speak("Countdown initiated.");
+            // Broadcast to room peers
+            broadcastMessage({
+                type: 'START_RALLY',
+                holdingId: current.id,
+                items: timetable
+            });
+
             updateScheduleLiveTick();
         }
 
         function cancelSchedule() {
-            scheduledRally = null;
+            const current = holdings[activeHoldingIndex];
+            if (!current) return;
+            current.scheduledRally = null;
             window.speechSynthesis.cancel();
-            document.getElementById('scheduleStatusBadge').innerText = "STANDBY";
-            document.getElementById('scheduleStatusBadge').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase";
-            document.getElementById('nextLeadName').innerText = "--";
-            document.getElementById('nextLeadTimer').innerText = "--:--";
-            document.getElementById('nextLeadDetails').innerText = "Launch at: --:-- UTC • Hits at: --:-- UTC";
-            document.getElementById('scheduledQueue').innerHTML = `<div class="text-slate-500 italic text-center py-3">Press "Start Rally Countdown" to arm schedule</div>`;
-            document.getElementById('cancelContainer').classList.add('hidden');
+
+            broadcastMessage({
+                type: 'CANCEL_RALLY',
+                holdingId: current.id
+            });
+
+            updateScheduleLiveTick();
         }
 
+        // --- Voice Cue Engine ---
         function checkVoiceCues(item, launchDiffSec) {
             if (!item.voicedCues) item.voicedCues = {};
+
             if (launchDiffSec === 10 && !item.voicedCues['10s']) {
                 item.voicedCues['10s'] = true;
-                speak(`${item.name}, 10 seconds.`, 1.1);
+                speak(`${item.name}, ${item.targetName}, 10 seconds.`, 1.1);
             } else if (launchDiffSec >= 1 && launchDiffSec <= 5 && !item.voicedCues[`${launchDiffSec}s`]) {
                 item.voicedCues[`${launchDiffSec}s`] = true;
                 speak(launchDiffSec.toString());
@@ -493,14 +749,32 @@
             }
         }
 
+        // --- Live Schedule Render Loop ---
         function updateScheduleLiveTick() {
-            if (!scheduledRally || !scheduledRally.items.length) return;
-            const now = new Date();
+            const current = holdings[activeHoldingIndex];
             const queueEl = document.getElementById('scheduledQueue');
+            const now = new Date();
+
+            if (!current || !current.scheduledRally || !current.scheduledRally.items.length) {
+                document.getElementById('scheduleStatusBadge').innerText = "STANDBY";
+                document.getElementById('scheduleStatusBadge').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase";
+                document.getElementById('nextLeadTargetTag').innerText = "--";
+                document.getElementById('nextLeadName').innerText = "--";
+                document.getElementById('nextLeadTimer').innerText = "--:--";
+                document.getElementById('nextLeadDetails').innerText = "Launch at: --:-- UTC • Hits at: --:-- UTC";
+                queueEl.innerHTML = `<div class="text-slate-500 italic text-center py-3">Press "Broadcast & Start" to trigger room countdown</div>`;
+                document.getElementById('cancelContainer').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('scheduleStatusBadge').innerText = "COUNTDOWN ACTIVE";
+            document.getElementById('scheduleStatusBadge').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse";
+            document.getElementById('cancelContainer').classList.remove('hidden');
+
             queueEl.innerHTML = '';
             let upcoming = null;
 
-            scheduledRally.items.forEach(item => {
+            current.scheduledRally.items.forEach(item => {
                 const launchDiffSec = Math.round((item.launchDate.getTime() - now.getTime()) / 1000);
                 const hitDiffSec = Math.round((item.hitDate.getTime() - now.getTime()) / 1000);
                 const departDiffSec = launchDiffSec + RALLY_PREP_SECONDS;
@@ -520,7 +794,7 @@
                             <span class="mono font-bold text-amber-300">Start in -${formatMmSs(launchDiffSec)}</span>
                         </div>
                         <div class="flex justify-between items-center text-[10px] mono text-slate-400 border-t border-slate-900 pt-1">
-                            <span>Start: <strong class="text-slate-200">${item.launchFormatted}</strong></span>
+                            <span>Start Rally: <strong class="text-slate-200">${item.launchFormatted}</strong></span>
                             <span>Target Hit: <strong class="text-emerald-400">${item.hitFormatted} UTC</strong></span>
                         </div>
                     `;
@@ -574,18 +848,21 @@
             });
 
             if (upcoming) {
+                document.getElementById('nextLeadTargetTag').innerText = upcoming.item.targetName;
                 document.getElementById('nextLeadName').innerText = upcoming.item.name;
                 document.getElementById('nextLeadTimer').innerText = formatMmSs(upcoming.launchDiffSec);
                 document.getElementById('nextLeadTimer').className = "mono text-3xl font-extrabold text-amber-400 tracking-wider";
                 document.getElementById('nextLeadDetails').innerHTML = `Launch: <strong class="text-white">${upcoming.item.launchFormatted}</strong> &bull; Hits: <strong class="text-emerald-400">${upcoming.item.hitFormatted} UTC</strong> (+5m prep + march)`;
             } else {
-                const allLanded = scheduledRally.items.every(i => Math.round((i.hitDate.getTime() - now.getTime()) / 1000) <= 0);
+                const allLanded = current.scheduledRally.items.every(i => Math.round((i.hitDate.getTime() - now.getTime()) / 1000) <= 0);
                 if (allLanded) {
+                    document.getElementById('nextLeadTargetTag').innerText = current.name;
                     document.getElementById('nextLeadName').innerText = "ALL RALLIES IMPACTED";
                     document.getElementById('nextLeadTimer').innerText = "TARGET HIT";
                     document.getElementById('nextLeadTimer').className = "mono text-2xl font-extrabold text-emerald-400 tracking-wider";
                     document.getElementById('nextLeadDetails').innerText = "All friendly hits concluded";
                 } else {
+                    document.getElementById('nextLeadTargetTag').innerText = current.name;
                     document.getElementById('nextLeadName').innerText = "RALLIES ACTIVE";
                     document.getElementById('nextLeadTimer').innerText = "IN PROGRESS";
                     document.getElementById('nextLeadTimer').className = "mono text-2xl font-extrabold text-amber-400 tracking-wider animate-pulse";
@@ -594,7 +871,7 @@
             }
         }
 
-        // --- Opponents Radar ---
+        // --- Opponent Radar Controls (Synced to Room) ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
@@ -633,19 +910,19 @@
 
         function addOpponent() {
             opponents.push({ name: `Enemy ${opponents.length + 1}`, march: "01:30", etaUtc: null });
-            saveRoomData(currentRoom);
             renderOpponents();
+            broadcastFullState();
         }
 
         function removeOpponent(index) {
             opponents.splice(index, 1);
-            saveRoomData(currentRoom);
             renderOpponents();
+            broadcastFullState();
         }
 
         function updateOpponent(index, field, value) {
             opponents[index][field] = value;
-            saveRoomData(currentRoom);
+            broadcastFullState();
         }
 
         function triggerOpponentMarch(index) {
@@ -653,6 +930,7 @@
             const now = new Date();
             opponents[index].etaUtc = new Date(now.getTime() + (marchSec * 1000));
             renderOpponents();
+            broadcastFullState();
         }
 
         function updateOpponentCountdowns() {
@@ -675,11 +953,12 @@
             });
         }
 
-        // Initialize from URL or default
-        initRoomFromUrl();
-        renderLeads();
+        // Initialize App
+        checkUrlParams();
+        renderHoldingTabs();
+        renderCurrentHolding();
         renderOpponents();
-        calculateSync();
+        connectMqtt();
     </script>
 </body>
 </html>
