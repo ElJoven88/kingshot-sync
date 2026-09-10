@@ -271,7 +271,7 @@
                 <button onclick="closeRoomModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Quick Joven Preset Button -->
+            <!-- Quick Joven Preset Button (Loads Member Pass 1488, Keeps Admin Pin Secret) -->
             <button onclick="loadJovenRoomPreset()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center transition">
                 <i class="fa-solid fa-star text-amber-400 mr-1.5"></i> Load #ElJoven Official Room [S1488]
             </button>
@@ -285,7 +285,7 @@
                     <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. 5824">
                 </div>
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Member Password (Set by Admin)</label>
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Member Password</label>
                     <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for members">
                 </div>
                 <div class="pt-2 border-t border-slate-800">
@@ -293,10 +293,10 @@
                         <label class="block text-amber-400 font-bold uppercase text-[10px]">
                             <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Admin / Caller PIN
                         </label>
-                        <span class="text-[10px] text-slate-500 font-mono">Required for Admin</span>
+                        <span class="text-[10px] text-slate-500 font-mono">Required to Edit</span>
                     </div>
                     <input type="password" id="modalAdminPin" class="w-full bg-slate-950 border border-amber-500/50 px-3 py-2 rounded text-amber-300 font-mono outline-none focus:border-amber-500" placeholder="Enter Admin PIN">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank if joining as a Member (View-Only).</span>
+                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to join as Member (View-Only).</span>
                 </div>
             </div>
 
@@ -362,11 +362,11 @@
                 startMinutes: 3,
                 leads: [
                     { name: "Joven", march: "00:15", gap: 0 },
-                    { name: "Kilam", march: "00:25", gap: 1 },
-                    { name: "Toutout", march: "00:35", gap: 0 },
-                    { name: "Trony", march: "00:45", gap: 0 },
-                    { name: "Kenrick", march: "00:55", gap: 0 },
-                    { name: "Rob", march: "00:55", gap: 0 }
+                    { name: "Toutoutown", march: "00:25", gap: 0 },
+                    { name: "Trony", march: "00:35", gap: 0 },
+                    { name: "Kilam", march: "00:45", gap: 0 },
+                    { name: "Rob", march: "01:15", gap: 0 },
+                    { name: "Kenrick", march: "00:55", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -391,14 +391,14 @@
         let roomCode = "";
         let roomPass = "1234";
         let roomAdminPin = "9999";
-        let userRole = "admin"; // Admin by default when creating random room
+        let userRole = "admin";
 
         // Special "Joven" Presets
         const JOVEN_ROOM = "Joven";
         const JOVEN_MEMBER_PASS = "1488";
         const JOVEN_ADMIN_PIN = "Joven1488";
 
-        // Unique Client Identifier (Prevents echo loops & keyboard drop)
+        // Unique Client Identifier
         const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
 
         let mqttClient = null;
@@ -422,11 +422,11 @@
             document.getElementById('modalRoomCode').value = getRandomRoomCode();
         }
 
-        // Quick Preset for Special Joven Room
+        // Quick Preset for Special Joven Room (Prefills member pass 1488, hides admin PIN)
         function loadJovenRoomPreset() {
             document.getElementById('modalRoomCode').value = JOVEN_ROOM;
             document.getElementById('modalRoomPass').value = JOVEN_MEMBER_PASS;
-            document.getElementById('modalAdminPin').value = JOVEN_ADMIN_PIN;
+            document.getElementById('modalAdminPin').value = ""; // Kept secret & blank!
         }
 
         // --- Role & Permissions Enforcement ---
@@ -669,7 +669,8 @@
         function openRoomModal() {
             document.getElementById('modalRoomCode').value = roomCode;
             document.getElementById('modalRoomPass').value = roomPass;
-            document.getElementById('modalAdminPin').value = (userRole === 'admin') ? roomAdminPin : '';
+            // Never expose Joven Admin PIN even when reopening modal
+            document.getElementById('modalAdminPin').value = (userRole === 'admin' && roomCode !== JOVEN_ROOM) ? roomAdminPin : '';
             document.getElementById('roomModal').classList.remove('hidden');
         }
 
@@ -704,11 +705,9 @@
                 roomCode = enteredCode;
 
                 if (enteredCode === previousRoom && userRole === 'admin') {
-                    // Admin is updating their room passwords
                     roomPass = enteredPass;
                     if (enteredAdminPin) roomAdminPin = enteredAdminPin;
                 } else {
-                    // Switching to another room
                     if (enteredAdminPin && (enteredAdminPin === roomAdminPin || roomAdminPin === "9999")) {
                         userRole = "admin";
                         roomPass = enteredPass;
@@ -757,7 +756,6 @@
             const a = params.get('admin');
 
             if (r) {
-                // User visited someone's shared room
                 roomCode = r;
                 const isJoven = roomCode.toLowerCase() === JOVEN_ROOM.toLowerCase();
 
