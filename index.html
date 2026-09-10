@@ -13,11 +13,16 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        /* Lock styling for members */
+        .member-locked {
+            pointer-events: none !important;
+            opacity: 0.75 !important;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <!-- TOP BAR: Room Security, Credits & Live UTC Clock -->
+    <!-- TOP BAR: Room Security, Role Badge, Credits & Live UTC Clock -->
     <div>
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-2.5 shadow-md">
             <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -30,14 +35,21 @@
                     </span>
                 </div>
 
-                <!-- Room & Password Controller -->
+                <!-- Room & Role Indicator -->
                 <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg p-1 space-x-1.5 text-xs">
                     <button onclick="openRoomModal()" class="flex items-center space-x-1.5 px-2 py-1 bg-slate-900 hover:bg-slate-800 rounded text-slate-200 transition">
                         <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-red-500"></span>
                         <span class="font-bold" id="currentRoomDisplay">Room: Alpha</span>
-                        <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
+                        <i class="fa-solid fa-gear text-[10px] text-slate-400"></i>
                     </button>
-                    <button onclick="shareInviteLink()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded transition font-bold flex items-center">
+
+                    <!-- User Role Badge -->
+                    <div id="roleBadgeContainer" class="flex items-center">
+                        <!-- Populated by JS: ADMIN or VIEWER -->
+                    </div>
+
+                    <!-- Invite Dropdown Button -->
+                    <button onclick="openInviteModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded transition font-bold flex items-center">
                         <i class="fa-solid fa-share-nodes mr-1"></i> Invite
                     </button>
                 </div>
@@ -61,7 +73,7 @@
                 <div id="holdingsTabs" class="flex items-center space-x-1.5">
                     <!-- Dynamic tabs -->
                 </div>
-                <button onclick="addNewHolding()" class="flex-shrink-0 bg-slate-800 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-bold transition flex items-center">
+                <button id="addHoldingBtn" onclick="addNewHolding()" class="flex-shrink-0 bg-slate-800 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded font-bold transition flex items-center">
                     <i class="fa-solid fa-plus mr-1"></i> Add Holding
                 </button>
             </div>
@@ -96,8 +108,8 @@
                         <span id="utcClock" class="mono text-amber-300 font-bold text-lg md:text-xl tracking-wider">--:--:-- UTC</span>
                     </div>
 
-                    <!-- Delay presets & custom typing -->
-                    <div class="space-y-2 pt-1">
+                    <!-- Delay presets & custom typing (Disabled for non-admins) -->
+                    <div id="rallyDelayControls" class="space-y-2 pt-1">
                         <label class="text-[11px] font-semibold text-slate-400 uppercase">Select Delay or Type Minutes:</label>
                         <div class="flex flex-wrap items-center gap-2">
                             <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 focus-within:border-amber-500">
@@ -108,18 +120,23 @@
                             </div>
 
                             <div class="flex gap-1.5 flex-1 min-w-[200px]">
-                                <button onclick="setMinutes(1)" class="flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">1m</button>
-                                <button onclick="setMinutes(3)" class="flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">3m</button>
-                                <button onclick="setMinutes(5)" class="flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">5m</button>
-                                <button onclick="setMinutes(10)" class="flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">10m</button>
+                                <button onclick="setMinutes(1)" class="preset-btn flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">1m</button>
+                                <button onclick="setMinutes(3)" class="preset-btn flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">3m</button>
+                                <button onclick="setMinutes(5)" class="preset-btn flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">5m</button>
+                                <button onclick="setMinutes(10)" class="preset-btn flex-1 bg-slate-800 hover:bg-slate-700 active:bg-amber-600 py-2 rounded-lg text-xs font-bold border border-slate-700 transition">10m</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- START RALLY COUNTDOWN BUTTON -->
-                    <button onclick="startRallyCountdown()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm py-3 rounded-lg shadow-lg hover:shadow-amber-500/20 transition flex items-center justify-center tracking-wider uppercase">
-                        <i class="fa-solid fa-tower-broadcast mr-2"></i> Broadcast & Start Rally Countdown
-                    </button>
+                    <!-- START RALLY COUNTDOWN BUTTON (ADMIN ONLY) -->
+                    <div id="startActionContainer">
+                        <button id="startRallyBtn" onclick="startRallyCountdown()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm py-3 rounded-lg shadow-lg hover:shadow-amber-500/20 transition flex items-center justify-center tracking-wider uppercase">
+                            <i class="fa-solid fa-tower-broadcast mr-2"></i> Broadcast & Start Rally Countdown
+                        </button>
+                        <div id="memberLockedBanner" class="hidden w-full bg-slate-950 border border-slate-800 text-slate-400 text-xs py-3 rounded-lg text-center font-bold">
+                            <i class="fa-solid fa-lock text-amber-400 mr-2"></i> VIEW-ONLY MODE • AWAITING ADMIN TO LAUNCH
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2. RALLY LEADS SETUP -->
@@ -129,7 +146,7 @@
                             <h2 class="text-xs uppercase tracking-wider text-slate-300 font-bold">2. Friendly Rally Leads</h2>
                             <span class="text-[11px] text-slate-500">March in MM:SS &bull; Gap in Sec &bull; Includes 5m Rally Prep</span>
                         </div>
-                        <button onclick="addLead()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded text-xs font-semibold transition">
+                        <button id="addLeadBtn" onclick="addLead()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded text-xs font-semibold transition">
                             <i class="fa-solid fa-plus mr-1"></i> Add Lead
                         </button>
                     </div>
@@ -199,7 +216,7 @@
                     <div class="space-y-2">
                         <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue for Current Target:</span>
                         <div id="scheduledQueue" class="space-y-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
-                            <div class="text-slate-500 italic text-center py-3">Press "Broadcast & Start" to trigger room countdown</div>
+                            <div class="text-slate-500 italic text-center py-3">Awaiting Admin countdown launch</div>
                         </div>
                     </div>
 
@@ -219,7 +236,7 @@
                             </h2>
                             <span class="text-[11px] text-slate-400">Synchronized live for all scouts in room</span>
                         </div>
-                        <button onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
+                        <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
                             <i class="fa-solid fa-plus mr-1"></i> Add Enemy
                         </button>
                     </div>
@@ -247,32 +264,83 @@
         </div>
     </footer>
 
-    <!-- ROOM & PASSWORD MODAL -->
+    <!-- ROOM & ADMIN SECURITY MODAL -->
     <div id="roomModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-lock text-amber-400 mr-2"></i> Join / Switch War Room
+                    <i class="fa-solid fa-lock text-amber-400 mr-2"></i> Room & Admin Settings
                 </h3>
                 <button onclick="closeRoomModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Name / Code</label>
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Code</label>
                     <input type="text" id="modalRoomCode" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-amber-300 font-bold outline-none focus:border-amber-500" placeholder="e.g. WAR-ALPHA">
                 </div>
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Password / PIN</label>
-                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Room Password">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Teammates must enter this exact code and password to sync.</span>
+                    <label class="block text-slate-400 font-semibold mb-1 uppercase text-[10px]">Room Member Password</label>
+                    <input type="password" id="modalRoomPass" class="w-full bg-slate-950 border border-slate-700 px-3 py-2 rounded text-white font-mono outline-none focus:border-amber-500" placeholder="Password for everyone">
+                </div>
+                <div class="pt-2 border-t border-slate-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-amber-400 font-bold uppercase text-[10px]">
+                            <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Admin / Caller PIN
+                        </label>
+                        <span class="text-[10px] text-slate-500 font-mono">Needed to Edit</span>
+                    </div>
+                    <input type="password" id="modalAdminPin" class="w-full bg-slate-950 border border-amber-500/50 px-3 py-2 rounded text-amber-300 font-mono outline-none focus:border-amber-500" placeholder="Enter Admin PIN">
+                    <span class="text-[10px] text-slate-500 mt-1 block">Leave blank if joining as Member (View-Only).</span>
                 </div>
             </div>
 
             <div class="pt-2 flex space-x-2">
                 <button onclick="applyRoomSettings()" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded transition">
-                    Connect & Sync
+                    Save & Connect
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVITE SHARING MODAL -->
+    <div id="inviteModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center">
+                    <i class="fa-solid fa-share-nodes text-amber-400 mr-2"></i> Share Room Links
+                </h3>
+                <button onclick="closeInviteModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <!-- Member Link -->
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-300 flex items-center">
+                            <i class="fa-solid fa-users text-slate-400 mr-1.5"></i> Member Link (View-Only)
+                        </span>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Listeners</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Locks editing. Members hear live audio and copy chat.</p>
+                    <button onclick="copyInviteLink(false)" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 rounded transition mt-1">
+                        Copy Member Link
+                    </button>
+                </div>
+
+                <!-- Admin Link -->
+                <div class="bg-amber-950/20 p-3 rounded-lg border border-amber-500/40 space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-amber-400 flex items-center">
+                            <i class="fa-solid fa-crown mr-1.5"></i> Admin Link (Rally Caller)
+                        </span>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">Full Control</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Allows editing march times, adding leads, and launching countdowns.</p>
+                    <button onclick="copyInviteLink(true)" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1.5 rounded transition mt-1">
+                        Copy Admin Link
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -310,25 +378,78 @@
             { name: "Enemy Alpha", march: "02:30", etaUtc: null }
         ];
 
-        // Unique Client Identifier (Prevents echo loops & mobile keyboard drops)
-        const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
-
-        // Room & MQTT Real-Time State
+        // Security & Roles State
         let roomCode = "Alpha";
         let roomPass = "1234";
+        let roomAdminPin = "9999"; // Set default room admin pin
+        let userRole = "admin";    // 'admin' or 'member'
+
+        // Unique Client Identifier
+        const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
+
         let mqttClient = null;
         let currentTopic = "";
         let broadcastTimer = null;
 
-        // Debounce broadcast helper
         function debouncedBroadcast() {
+            if (userRole !== 'admin') return; // Only admins broadcast updates
             clearTimeout(broadcastTimer);
             broadcastTimer = setTimeout(() => {
                 broadcastFullState();
             }, 500);
         }
 
-        // --- WEB AUDIO API SYNTHESIZER (Lag-free audio cues) ---
+        // --- Role & Permissions Enforcement ---
+        function setRole(role) {
+            userRole = role;
+            updateRoleUI();
+        }
+
+        function updateRoleUI() {
+            const isAdmin = userRole === 'admin';
+            const badgeContainer = document.getElementById('roleBadgeContainer');
+
+            // 1. Role Badge in Header
+            if (isAdmin) {
+                badgeContainer.innerHTML = `
+                    <span class="bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold px-2 py-0.5 rounded text-[11px] flex items-center">
+                        <i class="fa-solid fa-crown text-amber-400 mr-1"></i> ADMIN
+                    </span>
+                `;
+            } else {
+                badgeContainer.innerHTML = `
+                    <button onclick="openRoomModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-[11px] flex items-center transition">
+                        <i class="fa-solid fa-user mr-1 text-slate-400"></i> MEMBER (Unlock)
+                    </button>
+                `;
+            }
+
+            // 2. Lock / Unlock Inputs
+            document.getElementById('holdingNameInput').disabled = !isAdmin;
+            document.getElementById('startMinutesInput').disabled = !isAdmin;
+
+            // Preset Buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.disabled = !isAdmin;
+                if (!isAdmin) btn.classList.add('opacity-40', 'cursor-not-allowed');
+                else btn.classList.remove('opacity-40', 'cursor-not-allowed');
+            });
+
+            // Add Buttons
+            document.getElementById('addLeadBtn').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('addHoldingBtn').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('addOpponentBtn').style.display = isAdmin ? 'block' : 'none';
+
+            // Start Countdown Action Button
+            document.getElementById('startRallyBtn').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('memberLockedBanner').style.display = isAdmin ? 'none' : 'block';
+
+            // Leads table inputs lock
+            renderCurrentHolding();
+            renderOpponents();
+        }
+
+        // --- WEB AUDIO API SYNTHESIZER ---
         let audioCtx = null;
         let audioEnabled = true;
 
@@ -342,7 +463,6 @@
             return audioCtx;
         }
 
-        // High precision radar tick for 3, 2, 1
         function playBeep(freq = 880, duration = 0.08) {
             if (!audioEnabled) return;
             try {
@@ -360,7 +480,6 @@
             } catch(e) {}
         }
 
-        // Launch chime for T-0 impact
         function playLaunchChime() {
             if (!audioEnabled) return;
             try {
@@ -381,7 +500,6 @@
             } catch(e) {}
         }
 
-        // Voice Engine (Rapid bursts)
         function speakRapid(text, rate = 1.35) {
             if (!audioEnabled || !('speechSynthesis' in window)) return;
             const utterance = new SpeechSynthesisUtterance(text);
@@ -419,7 +537,7 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 24);
         }
 
-        // --- MQTT WebSockets Real-Time Sync ---
+        // --- MQTT WebSockets Sync ---
         async function connectMqtt() {
             if (mqttClient) {
                 try { mqttClient.end(); } catch(e) {}
@@ -460,11 +578,12 @@
 
         function broadcastMessage(data) {
             if (!mqttClient || !mqttClient.connected) return;
-            data.senderId = myClientId; // Stamp message with local device ID
+            data.senderId = myClientId;
             mqttClient.publish(currentTopic, JSON.stringify(data));
         }
 
         function broadcastFullState() {
+            if (userRole !== 'admin') return;
             broadcastMessage({
                 type: 'FULL_STATE',
                 holdings: holdings,
@@ -474,11 +593,10 @@
         }
 
         function handleIncomingSync(data) {
-            // CRITICAL: Drop messages that originated from our own device to prevent keyboard minimize
-            if (!data || data.senderId === myClientId) return;
+            if (!data || data.senderId === myClientId) return; // Drop own echoes
 
             if (data.type === 'REQ_SYNC') {
-                broadcastFullState();
+                if (userRole === 'admin') broadcastFullState();
             } else if (data.type === 'FULL_STATE') {
                 if (data.holdings) {
                     holdings = data.holdings.map(h => {
@@ -523,10 +641,11 @@
             }
         }
 
-        // --- Room Modal Controls ---
+        // --- Room & Security Modal ---
         function openRoomModal() {
             document.getElementById('modalRoomCode').value = roomCode;
             document.getElementById('modalRoomPass').value = roomPass;
+            document.getElementById('modalAdminPin').value = (userRole === 'admin') ? roomAdminPin : '';
             document.getElementById('roomModal').classList.remove('hidden');
         }
 
@@ -537,21 +656,55 @@
         function applyRoomSettings() {
             roomCode = document.getElementById('modalRoomCode').value.trim() || "Alpha";
             roomPass = document.getElementById('modalRoomPass').value.trim() || "1234";
+            const enteredAdminPin = document.getElementById('modalAdminPin').value.trim();
+
+            if (enteredAdminPin === roomAdminPin) {
+                userRole = "admin";
+            } else if (enteredAdminPin === "") {
+                userRole = "member";
+            } else {
+                alert("Incorrect Admin PIN! Entering as Member (View-Only).");
+                userRole = "member";
+            }
+
             closeRoomModal();
+            updateRoleUI();
             connectMqtt();
         }
 
-        function shareInviteLink() {
-            const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}`;
+        // --- Invite Modal ---
+        function openInviteModal() {
+            document.getElementById('inviteModal').classList.remove('hidden');
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.add('hidden');
+        }
+
+        function copyInviteLink(asAdmin) {
+            let url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomCode)}&pass=${encodeURIComponent(roomPass)}`;
+            if (asAdmin) {
+                url += `&admin=${encodeURIComponent(roomAdminPin)}`;
+            }
             navigator.clipboard.writeText(url).then(() => {
-                alert(`Invite link for Room "${roomCode}" copied!\nPassword: "${roomPass}"\nShare both with your alliance.`);
+                alert(asAdmin ? "Admin Invite Link Copied!" : "Member (View-Only) Invite Link Copied!");
+                closeInviteModal();
             });
         }
 
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const r = params.get('room');
+            const p = params.get('pass');
+            const a = params.get('admin');
+
             if (r) roomCode = r;
+            if (p) roomPass = p;
+            if (a && a === roomAdminPin) {
+                userRole = "admin";
+            } else if (r) {
+                userRole = "member"; // Joined via shared room link without admin pin
+            }
         }
 
         // --- Live Master UTC Clock ---
@@ -592,6 +745,8 @@
             const container = document.getElementById('holdingsTabs');
             container.innerHTML = '';
 
+            const isAdmin = userRole === 'admin';
+
             holdings.forEach((h, index) => {
                 const isActive = index === activeHoldingIndex;
                 const tab = document.createElement('div');
@@ -600,7 +755,7 @@
                 }`;
                 tab.innerHTML = `
                     <span onclick="selectHolding(${index})">${h.name}</span>
-                    ${holdings.length > 1 ? `<button onclick="removeHolding(event, ${index})" class="text-slate-400 hover:text-red-500 pl-1"><i class="fa-solid fa-xmark text-[10px]"></i></button>` : ''}
+                    ${(holdings.length > 1 && isAdmin) ? `<button onclick="removeHolding(event, ${index})" class="text-slate-400 hover:text-red-500 pl-1"><i class="fa-solid fa-xmark text-[10px]"></i></button>` : ''}
                 `;
                 container.appendChild(tab);
             });
@@ -613,6 +768,7 @@
         }
 
         function addNewHolding() {
+            if (userRole !== 'admin') return;
             const id = 'target-' + Date.now();
             const count = holdings.length + 1;
             holdings.push({
@@ -630,7 +786,7 @@
 
         function removeHolding(e, index) {
             e.stopPropagation();
-            if (holdings.length <= 1) return;
+            if (userRole !== 'admin' || holdings.length <= 1) return;
             holdings.splice(index, 1);
             if (activeHoldingIndex >= holdings.length) activeHoldingIndex = holdings.length - 1;
             renderHoldingTabs();
@@ -639,6 +795,7 @@
         }
 
         function renameCurrentHolding(val) {
+            if (userRole !== 'admin') return;
             holdings[activeHoldingIndex].name = val.trim() || "Target";
             renderHoldingTabs();
             calculateSync();
@@ -648,6 +805,8 @@
         // --- Leads UI for Selected Holding ---
         function renderCurrentHolding() {
             const current = holdings[activeHoldingIndex];
+            const isAdmin = userRole === 'admin';
+
             document.getElementById('holdingNameInput').value = current.name;
             document.getElementById('startMinutesInput').value = current.startMinutes;
 
@@ -656,24 +815,25 @@
 
             current.leads.forEach((lead, index) => {
                 const row = document.createElement('div');
-                row.className = "grid grid-cols-12 gap-2 items-center bg-slate-950 p-2 rounded-lg border border-slate-800";
+                row.className = `grid grid-cols-12 gap-2 items-center bg-slate-950 p-2 rounded-lg border border-slate-800 ${!isAdmin ? 'member-locked' : ''}`;
                 row.innerHTML = `
                     <div class="col-span-5">
-                        <input type="text" value="${lead.name}" oninput="updateLead(${index}, 'name', this.value)"
+                        <input type="text" value="${lead.name}" ${!isAdmin ? 'disabled' : ''} oninput="updateLead(${index}, 'name', this.value)"
                             class="w-full bg-slate-900 border border-slate-700 px-2 py-1.5 rounded text-white text-xs font-semibold focus:border-amber-500 outline-none" placeholder="Name">
                     </div>
                     <div class="col-span-4">
-                        <input type="text" value="${lead.march}" oninput="updateLead(${index}, 'march', this.value)"
+                        <input type="text" value="${lead.march}" ${!isAdmin ? 'disabled' : ''} oninput="updateLead(${index}, 'march', this.value)"
                             class="w-full bg-slate-900 border border-slate-700 px-2 py-1.5 rounded text-amber-300 mono text-xs text-center focus:border-amber-500 outline-none" placeholder="MM:SS">
                     </div>
                     <div class="col-span-2">
-                        <input type="number" min="0" value="${lead.gap}" oninput="updateLead(${index}, 'gap', parseInt(this.value) || 0)"
+                        <input type="number" min="0" value="${lead.gap}" ${!isAdmin ? 'disabled' : ''} oninput="updateLead(${index}, 'gap', parseInt(this.value) || 0)"
                             class="w-full bg-slate-900 border border-slate-700 px-1.5 py-1.5 rounded text-white mono text-xs text-center focus:border-amber-500 outline-none" placeholder="0">
                     </div>
                     <div class="col-span-1 text-center">
+                        ${isAdmin ? `
                         <button onclick="removeLead(${index})" class="text-slate-500 hover:text-red-400 p-1">
                             <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
+                        </button>` : ''}
                     </div>
                 `;
                 container.appendChild(row);
@@ -683,6 +843,7 @@
         }
 
         function setMinutes(val) {
+            if (userRole !== 'admin') return;
             document.getElementById('startMinutesInput').value = val;
             holdings[activeHoldingIndex].startMinutes = val;
             calculateSync();
@@ -690,6 +851,7 @@
         }
 
         function setMinutesCustom(val) {
+            if (userRole !== 'admin') return;
             const num = parseFloat(val) || 0;
             holdings[activeHoldingIndex].startMinutes = num;
             calculateSync();
@@ -697,6 +859,7 @@
         }
 
         function addLead() {
+            if (userRole !== 'admin') return;
             const current = holdings[activeHoldingIndex];
             current.leads.push({ name: `Lead ${current.leads.length + 1}`, march: "01:00", gap: 0 });
             renderCurrentHolding();
@@ -704,14 +867,15 @@
         }
 
         function removeLead(index) {
+            if (userRole !== 'admin') return;
             const current = holdings[activeHoldingIndex];
             current.leads.splice(index, 1);
             renderCurrentHolding();
             broadcastFullState();
         }
 
-        // Input handler: Updates internal model & recalculates sync without destroying DOM focus
         function updateLead(index, field, value) {
+            if (userRole !== 'admin') return;
             holdings[activeHoldingIndex].leads[index][field] = value;
             calculateSync();
             debouncedBroadcast();
@@ -781,6 +945,7 @@
 
         // --- Start & Cancel Broadcast ---
         function startRallyCountdown() {
+            if (userRole !== 'admin') return;
             getAudioContext();
             const current = holdings[activeHoldingIndex];
             if (!current || current.leads.length === 0) return;
@@ -805,6 +970,7 @@
         }
 
         function cancelSchedule() {
+            if (userRole !== 'admin') return;
             const current = holdings[activeHoldingIndex];
             if (!current) return;
             current.scheduledRally = null;
@@ -818,11 +984,10 @@
             updateScheduleLiveTick();
         }
 
-        // --- SMART MULTI-RALLY AUDIO ENGINE (Radar Tones + Snappy Cues) ---
+        // --- Audio Engine ---
         function triggerSmartAudio(item, launchDiffSec, allItems) {
             if (!item.audioCues) item.audioCues = {};
 
-            // 10s: Cluster Warning
             if (launchDiffSec === 10 && !item.audioCues['10s']) {
                 item.audioCues['10s'] = true;
                 const nextLead = allItems.find(other => 
@@ -837,7 +1002,6 @@
                 }
             }
 
-            // 3, 2, 1: Zero-latency synthetic radar tones
             if (launchDiffSec === 3 && !item.audioCues['3s']) {
                 item.audioCues['3s'] = true;
                 playBeep(700, 0.07);
@@ -849,7 +1013,6 @@
                 playBeep(880, 0.09);
             }
 
-            // 0s: Launch Chime + Snappy Callout
             if (launchDiffSec === 0 && !item.audioCues['0s']) {
                 item.audioCues['0s'] = true;
                 playLaunchChime();
@@ -868,6 +1031,7 @@
             const current = holdings[activeHoldingIndex];
             const queueEl = document.getElementById('scheduledQueue');
             const now = new Date();
+            const isAdmin = userRole === 'admin';
 
             if (!current || !current.scheduledRally || !current.scheduledRally.items.length) {
                 document.getElementById('scheduleStatusBadge').innerText = "STANDBY";
@@ -876,14 +1040,19 @@
                 document.getElementById('nextLeadName').innerText = "--";
                 document.getElementById('nextLeadTimer').innerText = "--:--";
                 document.getElementById('nextLeadDetails').innerText = "Launch at: --:-- UTC • Hits at: --:-- UTC";
-                queueEl.innerHTML = `<div class="text-slate-500 italic text-center py-3">Press "Broadcast & Start" to trigger room countdown</div>`;
+                queueEl.innerHTML = `<div class="text-slate-500 italic text-center py-3">${isAdmin ? 'Press "Broadcast & Start" to trigger room countdown' : 'Awaiting Admin to start rally countdown'}</div>`;
                 document.getElementById('cancelContainer').classList.add('hidden');
                 return;
             }
 
             document.getElementById('scheduleStatusBadge').innerText = "COUNTDOWN ACTIVE";
             document.getElementById('scheduleStatusBadge').className = "text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse";
-            document.getElementById('cancelContainer').classList.remove('hidden');
+            
+            if (isAdmin) {
+                document.getElementById('cancelContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('cancelContainer').classList.add('hidden');
+            }
 
             queueEl.innerHTML = '';
             let upcoming = null;
@@ -990,19 +1159,21 @@
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
+            const isAdmin = userRole === 'admin';
+
             opponents.forEach((op, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2 text-xs";
+                card.className = `bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2 text-xs ${!isAdmin ? 'member-locked' : ''}`;
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <input type="text" value="${op.name}" oninput="updateOpponent(${index}, 'name', this.value)"
+                        <input type="text" value="${op.name}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'name', this.value)"
                             class="bg-slate-900 border border-slate-700 px-2 py-1 rounded text-red-300 font-semibold focus:border-red-500 outline-none w-36" placeholder="Enemy Name">
-                        <button onclick="removeOpponent(${index})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
+                        ${isAdmin ? `<button onclick="removeOpponent(${index})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>` : ''}
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <span class="text-[10px] text-slate-400 block mb-0.5">March (MM:SS)</span>
-                            <input type="text" value="${op.march}" oninput="updateOpponent(${index}, 'march', this.value)"
+                            <input type="text" value="${op.march}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'march', this.value)"
                                 class="w-full bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white mono text-center focus:border-red-500 outline-none">
                         </div>
                         <div>
@@ -1024,23 +1195,27 @@
         }
 
         function addOpponent() {
+            if (userRole !== 'admin') return;
             opponents.push({ name: `Enemy ${opponents.length + 1}`, march: "01:30", etaUtc: null });
             renderOpponents();
             broadcastFullState();
         }
 
         function removeOpponent(index) {
+            if (userRole !== 'admin') return;
             opponents.splice(index, 1);
             renderOpponents();
             broadcastFullState();
         }
 
         function updateOpponent(index, field, value) {
+            if (userRole !== 'admin') return;
             opponents[index][field] = value;
             debouncedBroadcast();
         }
 
         function triggerOpponentMarch(index) {
+            if (userRole !== 'admin') return;
             const marchSec = parseMmSsToSeconds(opponents[index].march);
             const now = new Date();
             opponents[index].etaUtc = new Date(now.getTime() + (marchSec * 1000));
@@ -1070,6 +1245,7 @@
 
         // Initialize App
         checkUrlParams();
+        updateRoleUI();
         renderHoldingTabs();
         renderCurrentHolding();
         renderOpponents();
