@@ -378,8 +378,11 @@
                 name: "Main Target",
                 startMinutes: 3,
                 leads: [
-                    { name: "Kilam", march: "01:15", gap: 0 },
-                    { name: "GM", march: "00:45", gap: 0 }
+                    { name: "Kilam", march: "00:15", gap: 1 },
+                    { name: "Kenrick", march: "00:25", gap: 0 },
+                    { name: "Toutoutown", march: "00:35", gap: 0 },
+                    { name: "Rob", march: "00:45", gap: 0 },
+                    { name: "TRONY", march: "00:55", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -1167,9 +1170,9 @@
                 if (audibleCluster.length > 1) {
                     const names = audibleCluster.map(c => c.name);
                     const formattedNames = names.length === 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
-                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.3);
+                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.1);
                 } else if (audibleCluster.length === 1) {
-                    speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.25);
+                    speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.1);
                 }
 
                 // Mark all cluster items as warned
@@ -1209,7 +1212,7 @@
                     const names = audibleSimultaneous.map(s => s.name).join(' and ');
                     speakRapid(`${names}, GO!`, 1.5);
                 } else if (audibleSimultaneous.length === 1) {
-                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.45);
+                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.25);
                 }
 
                 simultaneous.forEach(s => {
