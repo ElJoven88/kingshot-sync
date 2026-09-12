@@ -78,11 +78,11 @@
             </div>
         </nav>
 
-        <!-- MAIN INTERFACE: Mobile First Order (1. Active Timers -> 2. Rally Planner -> 3. Radar) -->
-        <main class="max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+        <!-- MAIN INTERFACE: Mobile Top Priority (1. Active Timers -> 2. Rally Planner -> 3. Radar) -->
+        <main class="max-w-7xl mx-auto w-full p-4 flex flex-col lg:grid lg:grid-cols-12 gap-6 flex-1">
 
-            <!-- 1. SCHEDULED COUNTDOWN DISPLAY (PHYSICALLY 1ST: ON MOBILE THIS IS AT THE VERY TOP!) -->
-            <section id="countdownDisplaySection" class="lg:col-span-5 lg:col-start-8 lg:row-start-1 space-y-4">
+            <!-- 1. ACTIVE SCHEDULE & HIT TIMERS (ORDER-1 ON MOBILE: DOCKED AT VERY TOP) -->
+            <section id="countdownDisplaySection" class="order-1 lg:order-none lg:col-span-5 lg:col-start-8 lg:row-start-1 space-y-4">
                 <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-5 shadow-sm space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <div>
@@ -116,8 +116,7 @@
                                 <button onclick="setAllLeadsAudio(false)" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Mute All</button>
                             </div>
                         </div>
-                        <p class="text-[10px] text-slate-500">Tap a lead to mute/unmute sound cues & announcements for yourself:</p>
-                        <!-- Filter chips rendered dynamically -->
+                        <p class="text-[10px] text-slate-500">Tap a lead to mute/unmute voice and cues for your device:</p>
                         <div id="audioFilterChips" class="flex flex-wrap gap-1.5 pt-0.5"></div>
                     </div>
 
@@ -137,10 +136,10 @@
                 </div>
             </section>
 
-            <!-- 2. RALLY PLANNER CONTROLS (LEFT COLUMN ON DESKTOP | 2ND ON MOBILE) -->
-            <section id="rallyPlannerSection" class="lg:col-span-7 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-5">
+            <!-- 2. RALLY PLANNER CONTROLS (ORDER-2 ON MOBILE | LEFT COLUMN ON DESKTOP) -->
+            <section id="rallyPlannerSection" class="order-2 lg:order-none lg:col-span-7 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-5">
 
-                <!-- 1. Start Time Controller & Live UTC Clock -->
+                <!-- Start Time Controller & Live UTC Clock -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
                     
                     <div class="flex justify-between items-center">
@@ -194,7 +193,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Rally Leads Setup -->
+                <!-- Rally Leads Setup -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <div>
@@ -216,7 +215,7 @@
                     <div id="leadsList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 3. Plain Text Output for Chat -->
+                <!-- Plain Text Output for Chat -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
                         <div>
@@ -241,8 +240,8 @@
 
             </section>
 
-            <!-- 3. OPPONENT MARCH RADAR (BOTTOM RIGHT ON DESKTOP | 3RD ON MOBILE) -->
-            <section id="opponentRadarSection" class="lg:col-span-5 lg:col-start-8 lg:row-start-2 space-y-4">
+            <!-- 3. OPPONENT MARCH RADAR (ORDER-3 ON MOBILE | BOTTOM RIGHT ON DESKTOP) -->
+            <section id="opponentRadarSection" class="order-3 lg:order-none lg:col-span-5 lg:col-start-8 lg:row-start-2 space-y-4">
                 <div class="bg-slate-900 border border-red-900/40 rounded-xl p-5 shadow-sm flex flex-col space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <div>
@@ -310,7 +309,7 @@
                         <label class="block text-amber-400 font-bold uppercase text-[10px]">
                             <i class="fa-solid fa-crown text-amber-400 mr-1"></i> Admin / Caller PIN
                         </label>
-                        <span class="text-[10px] text-slate-500 font-mono">Required for Admin</span>
+                        <span class="text-[10px] text-slate-500 font-mono">Required to Edit</span>
                     </div>
                     <input type="password" id="modalAdminPin" class="w-full bg-slate-950 border border-amber-500/50 px-3 py-2 rounded text-amber-300 font-mono outline-none focus:border-amber-500" placeholder="Enter Admin PIN">
                     <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to join as Member (View-Only).</span>
@@ -379,10 +378,10 @@
                 startMinutes: 3,
                 leads: [
                     { name: "Kilam", march: "00:15", gap: 1 },
-                    { name: "Kenrick", march: "00:25", gap: 0 },
-                    { name: "Toutoutown", march: "00:35", gap: 0 },
-                    { name: "Rob", march: "00:45", gap: 0 },
-                    { name: "TRONY", march: "00:55", gap: 0 }
+                    { name: "Kenrick", march: "00:25", gap: 1 },
+                    { name: "Rob", march: "00:35", gap: 1 },
+                    { name: "Toutoutown", march: "00:45", gap: 1 },
+                    { name: "trony", march: "00:55", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -414,7 +413,7 @@
         const JOVEN_MEMBER_PASS = "1488";
         const JOVEN_ADMIN_PIN = "Joven1488";
 
-        // Personal Audio Filter State (Stored locally on player's device)
+        // Personal Audio Filter State (Stored locally on device)
         let mutedLeads = JSON.parse(localStorage.getItem('ks_muted_leads') || '[]');
 
         function isLeadMuted(name) {
@@ -598,11 +597,12 @@
             } catch(e) {}
         }
 
-        function speakRapid(text, rate = 1.35) {
+        // Voice Engine: Normal clear tempo (rate = 1.0)
+        function speakRapid(text, rate = 1.0) {
             if (!audioEnabled || !('speechSynthesis' in window)) return;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = rate;
-            utterance.pitch = 1.05;
+            utterance.pitch = 1.0;
             window.speechSynthesis.speak(utterance);
         }
 
@@ -626,35 +626,64 @@
             }
         }
 
-        // --- Topic Obfuscator ---
-        async function getTopicHash(room, pass) {
-            const raw = `${room.trim().toLowerCase()}:::${pass.trim()}`;
-            const msgUint8 = new TextEncoder().encode(raw);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 24);
+        // --- BULLETPROOF HASH & MULTI-BROKER FAILOVER ---
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(16).padStart(8, '0');
         }
 
-        // --- MQTT WebSockets Sync ---
+        async function getTopicHash(room, pass) {
+            const raw = `${(room || "alpha").trim().toLowerCase()}:::${(pass || "1234").trim()}`;
+            try {
+                if (window.crypto && crypto.subtle) {
+                    const msgUint8 = new TextEncoder().encode(raw);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 24);
+                }
+            } catch(e) {}
+            return simpleHash(raw);
+        }
+
+        const SYNC_BROKERS = [
+            'wss://broker.hivemq.com:8884/mqtt',
+            'wss://broker.emqx.io:8084/mqtt'
+        ];
+        let activeBrokerIndex = 0;
+
         async function connectMqtt() {
+            if (typeof mqtt === 'undefined') {
+                console.error("MQTT library not loaded. Check ad-blocker or CDN.");
+                document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-red-500";
+                return;
+            }
+
             if (mqttClient) {
-                try { mqttClient.end(); } catch(e) {}
+                try { mqttClient.end(true); } catch(e) {}
             }
 
             const topicHash = await getTopicHash(roomCode, roomPass);
             currentTopic = `kingshot/rooms/${topicHash}`;
 
-            document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
+            const dot = document.getElementById('syncStatusDot');
+            dot.className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
             document.getElementById('currentRoomDisplay').innerText = `Room: ${roomCode}`;
 
-            mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+            const brokerUrl = SYNC_BROKERS[activeBrokerIndex];
+
+            mqttClient = mqtt.connect(brokerUrl, {
                 clientId: myClientId,
                 clean: true,
-                reconnectPeriod: 2500
+                connectTimeout: 4000,
+                reconnectPeriod: 3000
             });
 
             mqttClient.on('connect', () => {
-                document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-emerald-500";
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
                 mqttClient.subscribe(currentTopic);
                 broadcastMessage({ type: 'REQ_SYNC' });
             });
@@ -664,13 +693,18 @@
                 try {
                     const data = JSON.parse(message.toString());
                     handleIncomingSync(data);
-                } catch(e) {
-                    console.error("MQTT parse err", e);
-                }
+                } catch(e) {}
             });
 
             mqttClient.on('error', () => {
-                document.getElementById('syncStatusDot').className = "w-2 h-2 rounded-full bg-red-500";
+                dot.className = "w-2 h-2 rounded-full bg-red-500";
+                try { mqttClient.end(true); } catch(e) {}
+                activeBrokerIndex = (activeBrokerIndex + 1) % SYNC_BROKERS.length;
+                setTimeout(connectMqtt, 1500);
+            });
+
+            mqttClient.on('offline', () => {
+                dot.className = "w-2 h-2 rounded-full bg-red-500";
             });
         }
 
@@ -1164,18 +1198,16 @@
                     return diff >= 0 && diff <= 8 && (!other.audioCues || !other.audioCues['10s']);
                 });
 
-                // Filter down to only leads unmuted on THIS device
                 const audibleCluster = cluster.filter(c => !isLeadMuted(c.name));
 
                 if (audibleCluster.length > 1) {
                     const names = audibleCluster.map(c => c.name);
                     const formattedNames = names.length === 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
-                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.1);
+                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.2);
                 } else if (audibleCluster.length === 1) {
                     speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.1);
                 }
 
-                // Mark all cluster items as warned
                 cluster.forEach(c => {
                     if (!c.audioCues) c.audioCues = {};
                     c.audioCues['10s'] = true;
@@ -1185,7 +1217,7 @@
             // If the user muted this specific lead, skip countdown beeps and launch speech!
             if (isLeadMuted(item.name)) return;
 
-            // 2. ZERO-LATENCY SYNTHESIZER BEAT CUES (T-3s, T-2s, T-1s with ascending pitch)
+            // 2. ZERO-LATENCY SYNTHESIZER BEATS (T-3s, T-2s, T-1s with ascending pitch)
             if (launchDiffSec === 3 && !item.audioCues['3s']) {
                 item.audioCues['3s'] = true;
                 playBeep(700, 0.08);
@@ -1210,9 +1242,9 @@
 
                 if (audibleSimultaneous.length > 1) {
                     const names = audibleSimultaneous.map(s => s.name).join(' and ');
-                    speakRapid(`${names}, GO!`, 1.5);
+                    speakRapid(`${names}, GO!`, 1.0);
                 } else if (audibleSimultaneous.length === 1) {
-                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.25);
+                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.5);
                 }
 
                 simultaneous.forEach(s => {
@@ -1363,7 +1395,7 @@
             }
         }
 
-        // --- Opponents Radar ---
+        // --- Opponents Radar (Hit Impact Time + Cancel Option) ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
@@ -1461,7 +1493,7 @@
                         timerEl.className = "mono font-bold text-red-400 text-sm";
                     } else {
                         timerEl.innerText = "IMPACT!";
-                        timerEl.className = "mono font-bold text-amber-400 text-sm animate-pulse";
+                        timerEl.className = "mono font-bold text-amber-400 text-xs animate-pulse";
                     }
                 } else {
                     timerEl.innerText = "--:--";
