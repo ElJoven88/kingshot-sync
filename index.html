@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>King's Shot — Tactical Multi-Rally Sync</title>
+    <!-- Prevent mobile browser caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -51,7 +55,7 @@
                     </button>
                 </div>
 
-                <!-- Audio Controls -->
+                <!-- Master Audio Toggle -->
                 <div class="flex items-center space-x-2">
                     <button onclick="toggleVoice()" id="voiceToggleBtn" class="flex items-center space-x-1 text-xs bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 px-2.5 py-1 rounded transition font-semibold">
                         <i class="fa-solid fa-volume-high" id="voiceIcon"></i>
@@ -74,13 +78,69 @@
             </div>
         </nav>
 
-        <!-- MAIN INTERFACE -->
+        <!-- MAIN INTERFACE: Mobile First Order (1. Active Timers -> 2. Rally Planner -> 3. Radar) -->
         <main class="max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-            <!-- LEFT COLUMN: Selected Holding Planner (7 Cols) -->
-            <section class="lg:col-span-7 space-y-5">
+            <!-- 1. SCHEDULED COUNTDOWN DISPLAY (PHYSICALLY 1ST: ON MOBILE THIS IS AT THE VERY TOP!) -->
+            <section id="countdownDisplaySection" class="lg:col-span-5 lg:col-start-8 lg:row-start-1 space-y-4">
+                <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-5 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                        <div>
+                            <h2 class="text-xs uppercase tracking-wider text-amber-400 font-bold flex items-center">
+                                <i class="fa-solid fa-stopwatch mr-1.5"></i> Active Schedule & Hit Timers
+                            </h2>
+                            <span class="text-[10px] text-slate-400">Total Hit = Start + 5m Prep + March</span>
+                        </div>
+                        <span id="scheduleStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase">
+                            Standby
+                        </span>
+                    </div>
 
-                <!-- 1. START TIME CONTROLLER & LIVE UTC CLOCK -->
+                    <!-- Next Up Lead Banner -->
+                    <div id="highlightCard" class="bg-slate-950 border border-slate-800 p-4 rounded-lg text-center space-y-1 transition duration-200">
+                        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold block">Next Lead Starting:</span>
+                        <div id="nextLeadTargetTag" class="text-xs font-bold text-amber-500 uppercase tracking-widest">--</div>
+                        <div id="nextLeadName" class="text-lg font-bold text-white tracking-wide">--</div>
+                        <div id="nextLeadTimer" class="mono text-3xl font-extrabold text-amber-400 tracking-wider">--:--</div>
+                        <div id="nextLeadDetails" class="text-[11px] mono text-slate-400">Launch at: --:-- UTC &bull; Hits at: --:-- UTC</div>
+                    </div>
+
+                    <!-- PERSONAL AUDIO SELECTION & MUTE FILTER -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 flex items-center">
+                                <i class="fa-solid fa-sliders text-amber-400 mr-1.5"></i> My Audio Alert Filter
+                            </span>
+                            <div class="space-x-1">
+                                <button onclick="setAllLeadsAudio(true)" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">All ON</button>
+                                <button onclick="setAllLeadsAudio(false)" class="text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Mute All</button>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500">Tap a lead to mute/unmute sound cues & announcements for yourself:</p>
+                        <!-- Filter chips rendered dynamically -->
+                        <div id="audioFilterChips" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+                    </div>
+
+                    <!-- Timetable Queue -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue for Current Target:</span>
+                        <div id="scheduledQueue" class="space-y-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
+                            <div class="text-slate-500 italic text-center py-3">Awaiting Admin countdown launch</div>
+                        </div>
+                    </div>
+
+                    <div id="cancelContainer" class="hidden pt-1">
+                        <button onclick="cancelSchedule()" class="w-full bg-slate-800 hover:bg-red-950/60 hover:text-red-400 text-slate-400 border border-slate-700 py-1.5 rounded text-xs font-semibold transition">
+                            Reset / Cancel Current Rally
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. RALLY PLANNER CONTROLS (LEFT COLUMN ON DESKTOP | 2ND ON MOBILE) -->
+            <section id="rallyPlannerSection" class="lg:col-span-7 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-5">
+
+                <!-- 1. Start Time Controller & Live UTC Clock -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
                     
                     <div class="flex justify-between items-center">
@@ -134,7 +194,7 @@
                     </div>
                 </div>
 
-                <!-- 2. RALLY LEADS SETUP -->
+                <!-- 2. Rally Leads Setup -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <div>
@@ -156,7 +216,7 @@
                     <div id="leadsList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 3. PLAIN TEXT OUTPUT FOR CHAT -->
+                <!-- 3. Plain Text Output for Chat -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
                         <div>
@@ -181,48 +241,8 @@
 
             </section>
 
-            <!-- RIGHT COLUMN: Countdown Queue & Opponent Radar (5 Cols) -->
-            <aside class="lg:col-span-5 space-y-5">
-
-                <!-- SCHEDULED DISPLAY -->
-                <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-5 shadow-sm space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                        <div>
-                            <h2 class="text-xs uppercase tracking-wider text-amber-400 font-bold flex items-center">
-                                <i class="fa-solid fa-stopwatch mr-1.5"></i> Active Schedule & Hit Timers
-                            </h2>
-                            <span class="text-[10px] text-slate-400">Total Hit = Start + 5m Prep + March</span>
-                        </div>
-                        <span id="scheduleStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase">
-                            Standby
-                        </span>
-                    </div>
-
-                    <!-- Next Up Lead Banner -->
-                    <div id="highlightCard" class="bg-slate-950 border border-slate-800 p-4 rounded-lg text-center space-y-1 transition duration-200">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold block">Next Lead Starting:</span>
-                        <div id="nextLeadTargetTag" class="text-xs font-bold text-amber-500 uppercase tracking-widest">--</div>
-                        <div id="nextLeadName" class="text-lg font-bold text-white tracking-wide">--</div>
-                        <div id="nextLeadTimer" class="mono text-3xl font-extrabold text-amber-400 tracking-wider">--:--</div>
-                        <div id="nextLeadDetails" class="text-[11px] mono text-slate-400">Launch at: --:-- UTC &bull; Hits at: --:-- UTC</div>
-                    </div>
-
-                    <!-- Timetable Queue -->
-                    <div class="space-y-2">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue for Current Target:</span>
-                        <div id="scheduledQueue" class="space-y-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
-                            <div class="text-slate-500 italic text-center py-3">Awaiting Admin countdown launch</div>
-                        </div>
-                    </div>
-
-                    <div id="cancelContainer" class="hidden pt-1">
-                        <button onclick="cancelSchedule()" class="w-full bg-slate-800 hover:bg-red-950/60 hover:text-red-400 text-slate-400 border border-slate-700 py-1.5 rounded text-xs font-semibold transition">
-                            Reset / Cancel Current Rally
-                        </button>
-                    </div>
-                </div>
-
-                <!-- SHARED OPPONENT MARCH RADAR -->
+            <!-- 3. OPPONENT MARCH RADAR (BOTTOM RIGHT ON DESKTOP | 3RD ON MOBILE) -->
+            <section id="opponentRadarSection" class="lg:col-span-5 lg:col-start-8 lg:row-start-2 space-y-4">
                 <div class="bg-slate-900 border border-red-900/40 rounded-xl p-5 shadow-sm flex flex-col space-y-3">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
                         <div>
@@ -238,8 +258,7 @@
 
                     <div id="opponentsList" class="space-y-2.5 overflow-y-auto max-h-[350px] pr-1"></div>
                 </div>
-
-            </aside>
+            </section>
 
         </main>
     </div>
@@ -331,7 +350,7 @@
                     </button>
                 </div>
 
-                <!-- Admin Link (FIX 1: Strictly visible ONLY if user is Admin) -->
+                <!-- Admin Link (Strictly visible ONLY if user is Admin) -->
                 <div id="adminInviteCard" class="hidden bg-amber-950/20 p-3 rounded-lg border border-amber-500/40 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-amber-400 flex items-center">
@@ -359,11 +378,8 @@
                 name: "Main Target",
                 startMinutes: 3,
                 leads: [
-                    { name: "Kilam", march: "00:15", gap: 1 },
-                    { name: "Kenrick", march: "00:25", gap: 0 },
-                    { name: "Toutoutown", march: "00:35", gap: 0 },
-                    { name: "Rob", march: "00:45", gap: 0 },
-                    { name: "trony", march: "00:55", gap: 0 }
+                    { name: "Kilam", march: "01:15", gap: 0 },
+                    { name: "GM", march: "00:45", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -394,6 +410,63 @@
         const JOVEN_ROOM = "Joven";
         const JOVEN_MEMBER_PASS = "1488";
         const JOVEN_ADMIN_PIN = "Joven1488";
+
+        // Personal Audio Filter State (Stored locally on player's device)
+        let mutedLeads = JSON.parse(localStorage.getItem('ks_muted_leads') || '[]');
+
+        function isLeadMuted(name) {
+            return mutedLeads.includes(name);
+        }
+
+        function toggleLeadAudio(name) {
+            if (mutedLeads.includes(name)) {
+                mutedLeads = mutedLeads.filter(n => n !== name);
+            } else {
+                mutedLeads.push(name);
+            }
+            localStorage.setItem('ks_muted_leads', JSON.stringify(mutedLeads));
+            renderAudioFilterChips();
+            updateScheduleLiveTick();
+        }
+
+        function setAllLeadsAudio(enableAll) {
+            const current = holdings[activeHoldingIndex];
+            if (!current) return;
+            if (enableAll) {
+                mutedLeads = [];
+            } else {
+                mutedLeads = current.leads.map(l => l.name);
+            }
+            localStorage.setItem('ks_muted_leads', JSON.stringify(mutedLeads));
+            renderAudioFilterChips();
+            updateScheduleLiveTick();
+        }
+
+        function renderAudioFilterChips() {
+            const container = document.getElementById('audioFilterChips');
+            if (!container) return;
+            const current = holdings[activeHoldingIndex];
+            if (!current || !current.leads.length) {
+                container.innerHTML = '<span class="text-[10px] text-slate-500">No leads in target</span>';
+                return;
+            }
+            let html = '';
+            current.leads.forEach(lead => {
+                const muted = isLeadMuted(lead.name);
+                html += `
+                    <button onclick="toggleLeadAudio('${lead.name}')" class="px-2 py-1 rounded text-[10px] font-mono font-bold transition flex items-center space-x-1 ${
+                        muted 
+                        ? 'bg-slate-900 text-slate-500 border border-slate-800 hover:bg-slate-800' 
+                        : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/50 hover:bg-emerald-900/60 shadow-sm'
+                    }">
+                        <span>${muted ? '🔇' : '🔊'}</span>
+                        <span>${lead.name}</span>
+                        ${muted ? '<span class="text-[9px] text-slate-600">(Muted)</span>' : ''}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
 
         // Unique Client Identifier
         const myClientId = 'ks_' + Math.random().toString(36).substring(2, 10);
@@ -468,6 +541,7 @@
 
             renderCurrentHolding();
             renderOpponents();
+            renderAudioFilterChips();
         }
 
         // --- WEB AUDIO API SYNTHESIZER ---
@@ -492,7 +566,7 @@
                 const gain = ctx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
@@ -511,7 +585,7 @@
                     const gain = ctx.createGain();
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(freq, now + (i * 0.07));
-                    gain.gain.setValueAtTime(0.35, now + (i * 0.07));
+                    gain.gain.setValueAtTime(0.38, now + (i * 0.07));
                     gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.07) + 0.25);
                     osc.connect(gain);
                     gain.connect(ctx.destination);
@@ -640,6 +714,7 @@
                 renderHoldingTabs();
                 renderCurrentHolding();
                 renderOpponents();
+                renderAudioFilterChips();
             } else if (data.type === 'START_RALLY') {
                 const targetHolding = holdings.find(h => h.id === data.holdingId);
                 if (targetHolding) {
@@ -652,6 +727,7 @@
                     };
                     speakRapid(`Rally armed for ${targetHolding.name}`);
                     renderCurrentHolding();
+                    renderAudioFilterChips();
                 }
             } else if (data.type === 'CANCEL_RALLY') {
                 const targetHolding = holdings.find(h => h.id === data.holdingId);
@@ -722,7 +798,7 @@
             connectMqtt();
         }
 
-        // --- Invite Modal (FIX 1: Strictly show Admin Link ONLY if logged in as Admin) ---
+        // --- Invite Modal ---
         function openInviteModal() {
             const adminCard = document.getElementById('adminInviteCard');
             if (userRole === 'admin') {
@@ -817,7 +893,6 @@
             return `${m}:${s}`;
         }
 
-        // Full UTC clock format for exact impact
         function formatUtcTimestamp(date) {
             if (!date) return "--:--:-- UTC";
             const h = String(date.getUTCHours()).padStart(2, '0');
@@ -850,6 +925,7 @@
             activeHoldingIndex = index;
             renderHoldingTabs();
             renderCurrentHolding();
+            renderAudioFilterChips();
         }
 
         function addNewHolding() {
@@ -866,6 +942,7 @@
             activeHoldingIndex = holdings.length - 1;
             renderHoldingTabs();
             renderCurrentHolding();
+            renderAudioFilterChips();
             broadcastFullState();
         }
 
@@ -876,6 +953,7 @@
             if (activeHoldingIndex >= holdings.length) activeHoldingIndex = holdings.length - 1;
             renderHoldingTabs();
             renderCurrentHolding();
+            renderAudioFilterChips();
             broadcastFullState();
         }
 
@@ -948,6 +1026,7 @@
             const current = holdings[activeHoldingIndex];
             current.leads.push({ name: `Lead ${current.leads.length + 1}`, march: "01:00", gap: 0 });
             renderCurrentHolding();
+            renderAudioFilterChips();
             broadcastFullState();
         }
 
@@ -956,6 +1035,7 @@
             const current = holdings[activeHoldingIndex];
             current.leads.splice(index, 1);
             renderCurrentHolding();
+            renderAudioFilterChips();
             broadcastFullState();
         }
 
@@ -963,6 +1043,7 @@
             if (userRole !== 'admin') return;
             holdings[activeHoldingIndex].leads[index][field] = value;
             calculateSync();
+            renderAudioFilterChips();
             debouncedBroadcast();
         }
 
@@ -1069,39 +1150,72 @@
             updateScheduleLiveTick();
         }
 
-        // --- Audio Engine ---
+        // --- IMPROVISED AUDIO DIRECTOR WITH PER-USER LEAD FILTERING ---
         function triggerSmartAudio(item, launchDiffSec, allItems) {
             if (!item.audioCues) item.audioCues = {};
 
+            // 1. T-10s CLUSTER WARNING (Skips leads the user chose to mute)
             if (launchDiffSec === 10 && !item.audioCues['10s']) {
-                item.audioCues['10s'] = true;
-                const nextLead = allItems.find(other => 
-                    other !== item && 
-                    other.launchDate >= item.launchDate && 
-                    (other.launchDate - item.launchDate) <= 5000
-                );
-                if (nextLead) {
-                    speakRapid(`Ready: ${item.name}, then ${nextLead.name}`);
-                } else {
-                    speakRapid(`${item.name}, 10 seconds`);
+                const cluster = allItems.filter(other => {
+                    const diff = (other.launchDate.getTime() - item.launchDate.getTime()) / 1000;
+                    return diff >= 0 && diff <= 8 && (!other.audioCues || !other.audioCues['10s']);
+                });
+
+                // Filter down to only leads unmuted on THIS device
+                const audibleCluster = cluster.filter(c => !isLeadMuted(c.name));
+
+                if (audibleCluster.length > 1) {
+                    const names = audibleCluster.map(c => c.name);
+                    const formattedNames = names.length === 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.3);
+                } else if (audibleCluster.length === 1) {
+                    speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.25);
                 }
+
+                // Mark all cluster items as warned
+                cluster.forEach(c => {
+                    if (!c.audioCues) c.audioCues = {};
+                    c.audioCues['10s'] = true;
+                });
             }
 
+            // If the user muted this specific lead, skip countdown beeps and launch speech!
+            if (isLeadMuted(item.name)) return;
+
+            // 2. ZERO-LATENCY SYNTHESIZER BEAT CUES (T-3s, T-2s, T-1s with ascending pitch)
             if (launchDiffSec === 3 && !item.audioCues['3s']) {
                 item.audioCues['3s'] = true;
-                playBeep(700, 0.07);
+                playBeep(700, 0.08);
             } else if (launchDiffSec === 2 && !item.audioCues['2s']) {
                 item.audioCues['2s'] = true;
-                playBeep(780, 0.07);
+                playBeep(820, 0.08);
             } else if (launchDiffSec === 1 && !item.audioCues['1s']) {
                 item.audioCues['1s'] = true;
-                playBeep(880, 0.09);
+                playBeep(960, 0.10);
             }
 
+            // 3. T-0s LAUNCH CHIME & ANNOUNCEMENT
             if (launchDiffSec === 0 && !item.audioCues['0s']) {
-                item.audioCues['0s'] = true;
+                const simultaneous = allItems.filter(other => {
+                    const diff = Math.abs((other.launchDate.getTime() - item.launchDate.getTime()) / 1000);
+                    return diff < 1 && (!other.audioCues || !other.audioCues['0s']);
+                });
+
+                const audibleSimultaneous = simultaneous.filter(s => !isLeadMuted(s.name));
+
                 playLaunchChime();
-                speakRapid(`${item.name}, GO!`, 1.45);
+
+                if (audibleSimultaneous.length > 1) {
+                    const names = audibleSimultaneous.map(s => s.name).join(' and ');
+                    speakRapid(`${names}, GO!`, 1.5);
+                } else if (audibleSimultaneous.length === 1) {
+                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.45);
+                }
+
+                simultaneous.forEach(s => {
+                    if (!s.audioCues) s.audioCues = {};
+                    s.audioCues['0s'] = true;
+                });
 
                 const card = document.getElementById('highlightCard');
                 if (card) {
@@ -1125,7 +1239,7 @@
                 document.getElementById('nextLeadName').innerText = "--";
                 document.getElementById('nextLeadTimer').innerText = "--:--";
                 document.getElementById('nextLeadDetails').innerText = "Launch at: --:-- UTC • Hits at: --:-- UTC";
-                queueEl.innerHTML = `<div class="text-slate-500 italic text-center py-3">${isAdmin ? 'Press "Broadcast & Start" to trigger room countdown' : 'Awaiting Admin to start rally countdown'}</div>`;
+                queueEl.innerHTML = `<div class="text-slate-500 italic text-center py-3">${isAdmin ? 'Press "Broadcast & Start" to trigger room countdown' : 'Awaiting Admin countdown launch'}</div>`;
                 document.getElementById('cancelContainer').classList.add('hidden');
                 return;
             }
@@ -1146,19 +1260,23 @@
                 const launchDiffSec = Math.round((item.launchDate.getTime() - now.getTime()) / 1000);
                 const hitDiffSec = Math.round((item.hitDate.getTime() - now.getTime()) / 1000);
                 const departDiffSec = launchDiffSec + RALLY_PREP_SECONDS;
+                const muted = isLeadMuted(item.name);
 
                 triggerSmartAudio(item, launchDiffSec, current.scheduledRally.items);
 
                 const row = document.createElement('div');
-                row.className = "bg-slate-950 border border-slate-800 px-3 py-2 rounded space-y-1";
+                row.className = `bg-slate-950 border ${muted ? 'border-slate-800/60 opacity-60' : 'border-slate-800'} px-3 py-2 rounded space-y-1 transition`;
 
                 if (launchDiffSec > 0) {
                     if (!upcoming) upcoming = { item, launchDiffSec };
                     row.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                <button onclick="toggleLeadAudio('${item.name}')" title="Mute/Unmute audio on your device" class="text-xs hover:scale-110 transition">
+                                    ${muted ? '🔇' : '🔊'}
+                                </button>
                                 <span class="font-bold text-white">${item.name}</span>
+                                ${muted ? '<span class="text-[9px] text-slate-500 font-mono">(Muted)</span>' : ''}
                             </div>
                             <span class="mono font-bold text-amber-300">Start in -${formatMmSs(launchDiffSec)}</span>
                         </div>
@@ -1172,7 +1290,9 @@
                     row.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <button onclick="toggleLeadAudio('${item.name}')" class="text-xs hover:scale-110 transition">
+                                    ${muted ? '🔇' : '🔊'}
+                                </button>
                                 <span class="font-bold text-amber-300">${item.name} (Rally Filling)</span>
                             </div>
                             <span class="mono font-bold text-amber-300">Departs in -${formatMmSs(departDiffSec)}</span>
@@ -1240,7 +1360,7 @@
             }
         }
 
-        // --- Opponents Radar (FIX 2: Prominent Hit Impact Time [HH:MM:SS UTC] + Cancel Option) ---
+        // --- Opponents Radar ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
@@ -1352,6 +1472,7 @@
         renderHoldingTabs();
         renderCurrentHolding();
         renderOpponents();
+        renderAudioFilterChips();
         connectMqtt();
     </script>
 </body>
