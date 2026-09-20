@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>King's Shot — Tactical Multi-Rally Sync</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MM2W5JJHT5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-MM2W5JJHT5');
+    </script>
+
     <!-- Prevent mobile browser caching -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -240,7 +251,7 @@
 
             </section>
 
-            <!-- 3. OPPONENT MARCH RADAR (DEDICATED COMMAND CENTER: FULL 12 COLUMNS) -->
+            <!-- 3. OPPONENT MARCH RADAR (FULL 12 COLUMNS WITH DEDICATED CHAT OUTPUT BOX) -->
             <section id="opponentRadarSection" class="order-3 lg:order-none lg:col-span-12 space-y-4 pt-2">
                 <div class="bg-slate-900 border border-red-900/40 rounded-xl p-5 shadow-xl flex flex-col space-y-4">
                     
@@ -257,15 +268,20 @@
                                         Total Arrival = +5m Rally Prep + March Time
                                     </span>
                                 </h2>
-                                <p class="text-[11px] text-slate-400">Track hostile hits, trigger unison alarms, and calibrate timers midway</p>
+                                <p class="text-[11px] text-slate-400">Track hostile hits, copy chat callouts, and calibrate timers midway</p>
                             </div>
                         </div>
 
                         <!-- Action Toolbar -->
-                        <div class="flex items-center space-x-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Quick Copy Opponent Hits Button -->
+                            <button onclick="copyOpponentsOutput()" id="copyOpponentsBtn" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center">
+                                <i class="fa-solid fa-copy mr-1.5"></i> Copy Enemy Hits
+                            </button>
+
                             <!-- Unison Start All -->
-                            <button id="unisonStartBtn" onclick="triggerAllOpponentsUnison()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-md flex items-center">
-                                <i class="fa-solid fa-bolt mr-1.5"></i> Start All in Unison
+                            <button id="unisonStartBtn" onclick="triggerAllOpponentsUnison()" class="bg-red-950 hover:bg-red-900 text-red-300 border border-red-600/50 font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center">
+                                <i class="fa-solid fa-bolt mr-1.5 text-amber-400"></i> Start All in Unison
                             </button>
 
                             <!-- Cancel All -->
@@ -274,9 +290,32 @@
                             </button>
 
                             <!-- Add Enemy -->
-                            <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
+                            <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
                                 <i class="fa-solid fa-plus mr-1"></i> Add Enemy
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- OPPONENT CHAT OUTPUT BOX (COPY-PASTE FOR ALLIANCE CHAT) -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-red-400 font-bold flex items-center">
+                                    <i class="fa-solid fa-bullhorn mr-1.5"></i> Opponent Hits Chat Text
+                                </span>
+                                <span class="text-[10px] text-slate-500">Sorted: Earliest enemy hit on top &rarr; Latest on bottom</span>
+                            </div>
+                            <button onclick="copyOpponentsOutput()" class="bg-slate-800 hover:bg-red-950/80 text-red-300 border border-red-500/40 text-xs font-semibold px-3 py-1 rounded transition flex items-center">
+                                <i class="fa-solid fa-copy mr-1.5"></i> Copy Text
+                            </button>
+                        </div>
+
+                        <div class="relative">
+                            <textarea id="opponentsChatOutput" readonly rows="3"
+                                class="w-full bg-slate-900 border border-slate-800 text-red-300 mono text-xs md:text-sm p-2.5 rounded-lg resize-none focus:outline-none leading-relaxed"></textarea>
+                            <span id="copyOpponentsAlert" class="hidden absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
+                                COPIED!
+                            </span>
                         </div>
                     </div>
 
@@ -297,7 +336,7 @@
             <div class="flex items-center space-x-2">
                 <span class="text-slate-500">Tool Created by:</span>
                 <span class="bg-amber-500/10 border border-amber-500/40 text-amber-400 font-mono font-bold px-2 py-0.5 rounded">
-                    #ElJoven • Server 1488
+                    #ElJoven • Server 1488 • 222170064
                 </span>
             </div>
         </div>
@@ -361,7 +400,7 @@
             </div>
 
             <div class="space-y-3 text-xs">
-                <!-- Member Link -->
+                <!-- Member Link (Always visible) -->
                 <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-slate-300 flex items-center">
@@ -375,7 +414,7 @@
                     </button>
                 </div>
 
-                <!-- Admin Link -->
+                <!-- Admin Link (Strictly visible ONLY if user is Admin) -->
                 <div id="adminInviteCard" class="hidden bg-amber-950/20 p-3 rounded-lg border border-amber-500/40 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-amber-400 flex items-center">
@@ -403,8 +442,11 @@
                 name: "Main Target",
                 startMinutes: 3,
                 leads: [
-                    { name: "Kilam", march: "01:15", gap: 0 },
-                    { name: "GM", march: "00:45", gap: 0 }
+                    { name: "Kilam", march: "00:15", gap: 1 },
+                    { name: "Toutoutown", march: "00:25", gap: 0 },
+                    { name: "Kenrick", march: "00:35", gap: 0 },
+                    { name: "Rob", march: "00:45", gap: 1 },
+                    { name: "TRONY", march: "00:55", gap: 0 }
                 ],
                 scheduledRally: null
             },
@@ -622,7 +664,7 @@
             } catch(e) {}
         }
 
-        function speakRapid(text, rate = 1.0) {
+        function speakRapid(text, rate = 1.3) {
             if (!audioEnabled || !('speechSynthesis' in window)) return;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = rate;
@@ -884,6 +926,7 @@
             });
         }
 
+        // --- Initialize Page & URL Params ---
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const r = params.get('room');
@@ -1094,6 +1137,7 @@
             const current = holdings[activeHoldingIndex];
             current.leads.splice(index, 1);
             renderCurrentHolding();
+            renderAudioFilterChips();
             broadcastFullState();
         }
 
@@ -1223,9 +1267,9 @@
                 if (audibleCluster.length > 1) {
                     const names = audibleCluster.map(c => c.name);
                     const formattedNames = names.length === 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
-                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.0);
+                    speakRapid(`Heads up: ${formattedNames}, 10 seconds!`, 1.3);
                 } else if (audibleCluster.length === 1) {
-                    speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.0);
+                    speakRapid(`${audibleCluster[0].name}, 10 seconds`, 1.3);
                 }
 
                 cluster.forEach(c => {
@@ -1259,9 +1303,9 @@
 
                 if (audibleSimultaneous.length > 1) {
                     const names = audibleSimultaneous.map(s => s.name).join(' and ');
-                    speakRapid(`${names}, GO!`, 1.0);
+                    speakRapid(`${names}, GO!`, 1.3);
                 } else if (audibleSimultaneous.length === 1) {
-                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.0);
+                    speakRapid(`${audibleSimultaneous[0].name}, GO!`, 1.3);
                 }
 
                 simultaneous.forEach(s => {
@@ -1412,6 +1456,87 @@
             }
         }
 
+        // --- OPPONENT CHAT TEXT GENERATOR & BULK/SINGLE COPY ---
+        function calculateOpponentsText() {
+            const textarea = document.getElementById('opponentsChatOutput');
+            if (!textarea) return;
+
+            if (!opponents || !opponents.length) {
+                textarea.value = "No opponents configured.";
+                return;
+            }
+
+            const now = new Date();
+            const running = opponents.filter(op => op.etaUtc);
+
+            let list = [];
+            let header = "";
+
+            if (running.length > 0) {
+                header = "Incoming Enemy Hits (UTC)";
+                list = running.map(op => ({
+                    name: op.name,
+                    eta: op.etaUtc
+                }));
+            } else {
+                header = "Projected Enemy Hits (UTC)";
+                list = opponents.map(op => {
+                    const marchSec = parseMmSsToSeconds(op.march);
+                    const totalSec = RALLY_PREP_SECONDS + marchSec;
+                    return {
+                        name: op.name,
+                        eta: new Date(now.getTime() + totalSec * 1000)
+                    };
+                });
+            }
+
+            // Sort earliest impact on top
+            list.sort((a, b) => a.eta - b.eta);
+
+            const lines = [header];
+            list.forEach(item => {
+                lines.push(`${item.name} - ${formatUtcTimestamp(item.eta)}`);
+            });
+
+            textarea.value = lines.join(String.fromCharCode(10));
+        }
+
+        function copyOpponentsOutput() {
+            calculateOpponentsText();
+            const textarea = document.getElementById('opponentsChatOutput');
+            if (!textarea || !textarea.value) return;
+
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const alertBox = document.getElementById('copyOpponentsAlert');
+                if (alertBox) {
+                    alertBox.classList.remove('hidden');
+                    setTimeout(() => alertBox.classList.add('hidden'), 1500);
+                }
+            });
+        }
+
+        function copySingleOpponent(index) {
+            const op = opponents[index];
+            if (!op) return;
+            let eta = op.etaUtc;
+            if (!eta) {
+                const marchSec = parseMmSsToSeconds(op.march);
+                eta = new Date(Date.now() + (RALLY_PREP_SECONDS + marchSec) * 1000);
+            }
+            const text = `${op.name} - ${formatUtcTimestamp(eta)}`;
+            navigator.clipboard.writeText(text).then(() => {
+                const alertBox = document.getElementById('copyOpponentsAlert');
+                if (alertBox) {
+                    alertBox.innerText = `COPIED: ${op.name}!`;
+                    alertBox.classList.remove('hidden');
+                    setTimeout(() => {
+                        alertBox.classList.add('hidden');
+                        alertBox.innerText = "COPIED!";
+                    }, 1500);
+                }
+            });
+        }
+
         // --- OPPONENTS RADAR: UNISON START, DEDICATED CARDS & LIVE CALIBRATION ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
@@ -1442,7 +1567,12 @@
                                 class="w-full bg-slate-900 border border-slate-700 px-2 py-1.5 rounded text-white mono text-center focus:border-red-500 outline-none font-bold text-xs">
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block mb-1 uppercase font-semibold">Hit Impact (UTC)</span>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] text-slate-400 uppercase font-semibold">Hit Impact (UTC)</span>
+                                <button onclick="copySingleOpponent(${index})" title="Copy this enemy hit time" class="text-slate-400 hover:text-amber-300 text-[10px] transition">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
                             <div class="bg-slate-900 border border-slate-800 px-2 py-1.5 rounded text-center text-amber-300 mono font-extrabold text-xs">
                                 ${op.etaUtc ? formatUtcTimestamp(op.etaUtc) : "--:--:-- UTC"}
                             </div>
@@ -1463,21 +1593,19 @@
                         </div>
                     </div>
 
-                    <!-- MIDWAY CALIBRATION TOOLBAR (FOR ADMIN TO REALIGN TIMERS LIVE) -->
+                    <!-- MIDWAY CALIBRATION TOOLBAR -->
                     ${isRunning && isAdmin ? `
                     <div class="bg-red-950/30 border border-red-500/30 rounded-lg p-2 space-y-1.5">
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="text-slate-300 font-bold uppercase"><i class="fa-solid fa-wrench text-amber-400 mr-1"></i> Re-align In-Game Time</span>
                             <span class="text-slate-400">Late click? Calibrate:</span>
                         </div>
-                        <!-- Quick Nudge Buttons -->
                         <div class="grid grid-cols-4 gap-1">
                             <button onclick="nudgeOpponent(${index}, -15)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">-15s</button>
                             <button onclick="nudgeOpponent(${index}, -5)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">-5s</button>
                             <button onclick="nudgeOpponent(${index}, 5)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">+5s</button>
                             <button onclick="nudgeOpponent(${index}, 15)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">+15s</button>
                         </div>
-                        <!-- Direct in-game prep remaining time calibration -->
                         <div class="flex items-center space-x-1 pt-1 border-t border-red-950">
                             <span class="text-[9px] text-slate-400">In-game prep left:</span>
                             <input type="text" id="calib-input-${index}" placeholder="04:20" class="w-16 bg-slate-900 border border-slate-700 text-amber-300 mono text-center text-xs py-0.5 rounded outline-none">
@@ -1503,6 +1631,8 @@
                 `;
                 container.appendChild(card);
             });
+
+            calculateOpponentsText();
         }
 
         function addOpponent() {
@@ -1522,10 +1652,10 @@
         function updateOpponent(index, field, value) {
             if (userRole !== 'admin') return;
             opponents[index][field] = value;
+            calculateOpponentsText();
             debouncedBroadcast();
         }
 
-        // --- Individual Start ---
         function triggerOpponentMarch(index) {
             if (userRole !== 'admin') return;
             const marchSec = parseMmSsToSeconds(opponents[index].march);
@@ -1536,7 +1666,6 @@
             broadcastFullState();
         }
 
-        // --- UNISON START (ALL ENEMY RALLIES AT ONCE) ---
         function triggerAllOpponentsUnison() {
             if (userRole !== 'admin' || !opponents.length) return;
             const now = new Date();
@@ -1550,7 +1679,6 @@
             broadcastFullState();
         }
 
-        // --- CANCEL ALL OPPONENTS ---
         function cancelAllOpponents() {
             if (userRole !== 'admin') return;
             opponents.forEach(op => { op.etaUtc = null; });
@@ -1558,7 +1686,6 @@
             broadcastFullState();
         }
 
-        // --- Individual Cancel ---
         function cancelOpponentRally(index) {
             if (userRole !== 'admin') return;
             opponents[index].etaUtc = null;
@@ -1566,7 +1693,6 @@
             broadcastFullState();
         }
 
-        // --- LIVE CALIBRATION: NUDGE (-15s, -5s, +5s, +15s) ---
         function nudgeOpponent(index, deltaSeconds) {
             if (userRole !== 'admin' || !opponents[index].etaUtc) return;
             opponents[index].etaUtc = new Date(opponents[index].etaUtc.getTime() + (deltaSeconds * 1000));
@@ -1574,7 +1700,6 @@
             broadcastFullState();
         }
 
-        // --- LIVE CALIBRATION: SYNC EXACT IN-GAME PREP REMAINING ---
         function calibrateOpponentPrep(index) {
             if (userRole !== 'admin' || !opponents[index].etaUtc) return;
             const input = document.getElementById(`calib-input-${index}`);
@@ -1582,13 +1707,11 @@
             const prepSec = parseMmSsToSeconds(input.value);
             const marchSec = parseMmSsToSeconds(opponents[index].march);
             const now = new Date();
-            // New ETA = current moment + typed remaining prep seconds + march duration
             opponents[index].etaUtc = new Date(now.getTime() + ((prepSec + marchSec) * 1000));
             renderOpponents();
             broadcastFullState();
         }
 
-        // --- OPPONENT COUNTDOWN & STAGE TICKER ---
         function updateOpponentCountdowns() {
             const now = new Date();
             opponents.forEach((op, index) => {
