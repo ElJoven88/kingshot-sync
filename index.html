@@ -78,10 +78,10 @@
             </div>
         </nav>
 
-        <!-- MAIN INTERFACE: Mobile Top Priority (1. Active Timers -> 2. Rally Planner -> 3. Dedicated Radar) -->
+        <!-- MAIN INTERFACE -->
         <main class="max-w-7xl mx-auto w-full p-4 flex flex-col lg:grid lg:grid-cols-12 gap-6 flex-1">
 
-            <!-- 1. ACTIVE SCHEDULE & HIT TIMERS (TOP OF SCREEN ON MOBILE) -->
+            <!-- 1. ACTIVE SCHEDULE & HIT TIMERS (ORDER-1 ON MOBILE: AT VERY TOP) -->
             <section id="countdownDisplaySection" class="order-1 lg:order-none lg:col-span-5 lg:col-start-8 lg:row-start-1 space-y-4">
                 <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-5 shadow-sm space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
@@ -136,8 +136,8 @@
                 </div>
             </section>
 
-            <!-- 2. RALLY PLANNER CONTROLS (LEFT COLUMN ON DESKTOP | 2ND ON MOBILE) -->
-            <section id="rallyPlannerSection" class="order-2 lg:order-none lg:col-span-7 lg:col-start-1 lg:row-start-1 lg:row-span-2 space-y-5">
+            <!-- 2. RALLY PLANNER CONTROLS (ORDER-2 ON MOBILE | LEFT COLUMN ON DESKTOP) -->
+            <section id="rallyPlannerSection" class="order-2 lg:order-none lg:col-span-7 lg:col-start-1 lg:row-start-1 space-y-5">
 
                 <!-- Start Time Controller & Live UTC Clock -->
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
@@ -240,37 +240,48 @@
 
             </section>
 
-            <!-- 3. OPPONENT MARCH RADAR (SEPARATE DEDICATED HOSTILE COMMAND AREA) -->
-            <section id="opponentRadarSection" class="order-3 lg:order-none lg:col-span-5 lg:col-start-8 lg:row-start-2 space-y-4">
-                <div class="bg-slate-900 border border-red-900/50 rounded-xl p-5 shadow-xl flex flex-col space-y-4">
+            <!-- 3. OPPONENT MARCH RADAR (DEDICATED COMMAND CENTER: FULL 12 COLUMNS) -->
+            <section id="opponentRadarSection" class="order-3 lg:order-none lg:col-span-12 space-y-4 pt-2">
+                <div class="bg-slate-900 border border-red-900/40 rounded-xl p-5 shadow-xl flex flex-col space-y-4">
                     
-                    <!-- Radar Header & Unison Controls -->
-                    <div class="border-b border-red-950 pb-3 space-y-2.5">
-                        <div class="flex justify-between items-center">
+                    <!-- Radar Header & Unison Toolbar -->
+                    <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="p-2 bg-red-950/60 border border-red-500/40 rounded-lg text-red-400">
+                                <i class="fa-solid fa-shield-halved text-base"></i>
+                            </span>
                             <div>
-                                <h2 class="text-xs uppercase tracking-wider text-red-400 font-bold flex items-center">
-                                    <i class="fa-solid fa-shield-halved mr-1.5 text-red-500 animate-pulse"></i> Opponent March Radar
+                                <h2 class="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center">
+                                    Opponent March Radar
+                                    <span class="ml-2 text-[10px] bg-red-950 border border-red-800 text-red-300 px-2 py-0.5 rounded font-mono font-normal">
+                                        Total Arrival = +5m Rally Prep + March Time
+                                    </span>
                                 </h2>
-                                <span class="text-[10px] text-slate-400">Total Hit = +5m Rally Prep + March Duration</span>
+                                <p class="text-[11px] text-slate-400">Track hostile hits, trigger unison alarms, and calibrate timers midway</p>
                             </div>
-                            <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-2.5 py-1 rounded text-xs font-semibold transition">
-                                <i class="fa-solid fa-plus mr-1"></i> Add Enemy
-                            </button>
                         </div>
 
-                        <!-- UNISON BATCH CONTROLS (START ALL / CANCEL ALL) -->
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="triggerAllOpponents()" class="bg-red-600 hover:bg-red-500 text-white text-[11px] font-extrabold py-2 px-2 rounded-lg shadow transition flex items-center justify-center">
-                                <i class="fa-solid fa-bolt mr-1.5"></i> Unison Launch All
+                        <!-- Action Toolbar -->
+                        <div class="flex items-center space-x-2">
+                            <!-- Unison Start All -->
+                            <button id="unisonStartBtn" onclick="triggerAllOpponentsUnison()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-md flex items-center">
+                                <i class="fa-solid fa-bolt mr-1.5"></i> Start All in Unison
                             </button>
-                            <button onclick="cancelAllOpponents()" class="bg-slate-800 hover:bg-red-950/80 text-red-300 hover:text-red-200 border border-slate-700 py-2 px-2 rounded-lg text-[11px] font-bold transition flex items-center justify-center">
-                                <i class="fa-solid fa-ban mr-1.5"></i> Cancel All
+
+                            <!-- Cancel All -->
+                            <button id="cancelAllOpponentsBtn" onclick="cancelAllOpponents()" class="bg-slate-800 hover:bg-red-950/80 text-slate-300 hover:text-red-400 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition font-semibold">
+                                <i class="fa-solid fa-ban mr-1"></i> Cancel All
+                            </button>
+
+                            <!-- Add Enemy -->
+                            <button id="addOpponentBtn" onclick="addOpponent()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Enemy
                             </button>
                         </div>
                     </div>
 
-                    <!-- Opponent Cards List with Mid-Flight Calibration -->
-                    <div id="opponentsList" class="space-y-3 overflow-y-auto max-h-[420px] pr-1"></div>
+                    <!-- Opponents Card Grid (Responsive 1 to 4 cols) -->
+                    <div id="opponentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
                 </div>
             </section>
 
@@ -350,7 +361,7 @@
             </div>
 
             <div class="space-y-3 text-xs">
-                <!-- Member Link (Always visible) -->
+                <!-- Member Link -->
                 <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-slate-300 flex items-center">
@@ -364,7 +375,7 @@
                     </button>
                 </div>
 
-                <!-- Admin Link (Strictly visible ONLY if user is Admin) -->
+                <!-- Admin Link -->
                 <div id="adminInviteCard" class="hidden bg-amber-950/20 p-3 rounded-lg border border-amber-500/40 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-amber-400 flex items-center">
@@ -412,7 +423,7 @@
         // Opponents State
         let opponents = [
             { name: "Enemy Alpha", march: "02:30", etaUtc: null },
-            { name: "Enemy Bravo", march: "02:15", etaUtc: null }
+            { name: "Enemy Bravo", march: "01:45", etaUtc: null }
         ];
 
         // Security & Roles State
@@ -498,6 +509,7 @@
             }, 500);
         }
 
+        // --- Random Code Generator [1111 - 9999] ---
         function getRandomRoomCode() {
             return Math.floor(1111 + Math.random() * (9999 - 1111 + 1)).toString();
         }
@@ -547,7 +559,9 @@
 
             document.getElementById('addLeadBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('addHoldingBtn').style.display = isAdmin ? 'flex' : 'none';
-            document.getElementById('addOpponentBtn').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('addOpponentBtn').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('unisonStartBtn').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('cancelAllOpponentsBtn').style.display = isAdmin ? 'flex' : 'none';
 
             document.getElementById('startRallyBtn').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('memberLockedBanner').style.display = isAdmin ? 'none' : 'block';
@@ -870,7 +884,6 @@
             });
         }
 
-        // --- Initialize Page & URL Params ---
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const r = params.get('room');
@@ -1195,11 +1208,10 @@
             updateScheduleLiveTick();
         }
 
-        // --- IMPROVISED AUDIO DIRECTOR WITH PER-USER LEAD FILTERING ---
+        // --- AUDIO DIRECTOR WITH CLUSTER WARNINGS ---
         function triggerSmartAudio(item, launchDiffSec, allItems) {
             if (!item.audioCues) item.audioCues = {};
 
-            // 1. T-10s CLUSTER WARNING (Skips leads the user chose to mute)
             if (launchDiffSec === 10 && !item.audioCues['10s']) {
                 const cluster = allItems.filter(other => {
                     const diff = (other.launchDate.getTime() - item.launchDate.getTime()) / 1000;
@@ -1222,10 +1234,8 @@
                 });
             }
 
-            // Skip if this lead is muted on this device
             if (isLeadMuted(item.name)) return;
 
-            // 2. ZERO-LATENCY SYNTHESIZER BEATS (T-3s, T-2s, T-1s with ascending pitch)
             if (launchDiffSec === 3 && !item.audioCues['3s']) {
                 item.audioCues['3s'] = true;
                 playBeep(700, 0.08);
@@ -1237,7 +1247,6 @@
                 playBeep(960, 0.10);
             }
 
-            // 3. T-0s LAUNCH CHIME & ANNOUNCEMENT
             if (launchDiffSec === 0 && !item.audioCues['0s']) {
                 const simultaneous = allItems.filter(other => {
                     const diff = Math.abs((other.launchDate.getTime() - item.launchDate.getTime()) / 1000);
@@ -1350,9 +1359,7 @@
                     row.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
-                                <button onclick="toggleLeadAudio('${item.name}')" class="text-xs hover:scale-110 transition">
-                                    ${muted ? '🔇' : '🔊'}
-                                </button>
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                                 <span class="font-bold text-emerald-300">${item.name} (Marching)</span>
                             </div>
                             <span class="mono font-bold text-emerald-400">Hits in -${formatMmSs(hitDiffSec)}</span>
@@ -1405,7 +1412,7 @@
             }
         }
 
-        // --- OPPONENTS RADAR: UNISON CONTROLS, IN-GAME CALIBRATION & INDIVIDUAL CONTROLS ---
+        // --- OPPONENTS RADAR: UNISON START, DEDICATED CARDS & LIVE CALIBRATION ---
         function renderOpponents() {
             const container = document.getElementById('opponentsList');
             container.innerHTML = '';
@@ -1414,71 +1421,84 @@
             opponents.forEach((op, index) => {
                 const card = document.createElement('div');
                 const isRunning = !!op.etaUtc;
-                card.className = `bg-slate-950 border ${isRunning ? 'border-red-500/60 bg-red-950/20 shadow-lg shadow-red-950/40' : 'border-slate-800'} rounded-lg p-3 space-y-2.5 text-xs ${!isAdmin ? 'member-locked' : ''}`;
+                card.className = `bg-slate-950 border ${isRunning ? 'border-red-500/80 bg-red-950/20 shadow-lg shadow-red-950/40' : 'border-slate-800'} rounded-xl p-4 space-y-3 text-xs transition duration-200`;
                 
                 card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <input type="text" value="${op.name}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'name', this.value)"
-                            class="bg-slate-900 border border-slate-700 px-2 py-1 rounded text-red-300 font-semibold focus:border-red-500 outline-none w-36" placeholder="Enemy Name">
+                    <!-- Card Top: Name & Delete -->
+                    <div class="flex justify-between items-center border-b border-slate-900 pb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full ${isRunning ? 'bg-red-500 animate-ping' : 'bg-slate-600'}"></span>
+                            <input type="text" value="${op.name}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'name', this.value)"
+                                class="bg-slate-900 border border-slate-700 px-2.5 py-1 rounded text-red-300 font-bold focus:border-red-500 outline-none w-36 sm:w-44 text-xs" placeholder="Enemy Name">
+                        </div>
                         ${isAdmin ? `<button onclick="removeOpponent(${index})" class="text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
                     </div>
 
+                    <!-- Timings Matrix -->
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <span class="text-[10px] text-slate-400 block mb-0.5 uppercase">March Duration (MM:SS)</span>
+                            <span class="text-[10px] text-slate-400 block mb-1 uppercase font-semibold">March (MM:SS)</span>
                             <input type="text" value="${op.march}" ${!isAdmin ? 'disabled' : ''} oninput="updateOpponent(${index}, 'march', this.value)"
-                                class="w-full bg-slate-900 border border-slate-700 px-2 py-1.5 rounded text-white mono text-center focus:border-red-500 outline-none font-bold">
+                                class="w-full bg-slate-900 border border-slate-700 px-2 py-1.5 rounded text-white mono text-center focus:border-red-500 outline-none font-bold text-xs">
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block mb-0.5 uppercase">Hit Impact (UTC) <span class="text-amber-400 font-bold">(+5m)</span></span>
-                            <div id="op-impact-${index}" class="bg-slate-900 border border-slate-800 px-2 py-1.5 rounded text-center text-amber-300 mono font-extrabold text-xs">
+                            <span class="text-[10px] text-slate-400 block mb-1 uppercase font-semibold">Hit Impact (UTC)</span>
+                            <div class="bg-slate-900 border border-slate-800 px-2 py-1.5 rounded text-center text-amber-300 mono font-extrabold text-xs">
                                 ${op.etaUtc ? formatUtcTimestamp(op.etaUtc) : "--:--:-- UTC"}
                             </div>
                         </div>
                     </div>
 
-                    <!-- IN-GAME TIMER CALIBRATION CONSOLE -->
-                    <div class="bg-slate-900/90 border border-slate-800 rounded p-2 space-y-1.5">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold flex items-center">
-                                <i class="fa-solid fa-crosshairs text-amber-400 mr-1"></i> Live Remaining / Calibrate
+                    <!-- Running Status & Live Countdown Display -->
+                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-lg p-2.5 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block uppercase">Status</span>
+                            <span id="op-status-${index}" class="font-bold text-xs ${isRunning ? 'text-amber-400' : 'text-slate-500'}">
+                                ${isRunning ? 'Active Rally' : 'Idle'}
                             </span>
-                            ${isRunning && isAdmin ? `
-                                <div class="flex space-x-1">
-                                    <button onclick="adjustOpponentSeconds(${index}, -10)" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[9px] rounded border border-slate-700">-10s</button>
-                                    <button onclick="adjustOpponentSeconds(${index}, -5)" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[9px] rounded border border-slate-700">-5s</button>
-                                    <button onclick="adjustOpponentSeconds(${index}, 5)" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[9px] rounded border border-slate-700">+5s</button>
-                                    <button onclick="adjustOpponentSeconds(${index}, 10)" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[9px] rounded border border-slate-700">+10s</button>
-                                </div>
-                            ` : ''}
                         </div>
-
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="op-remaining-input-${index}" 
-                                placeholder="${isRunning ? 'MM:SS' : 'Start rally first'}"
-                                ${(!isRunning || !isAdmin) ? 'disabled' : ''}
-                                onchange="calibrateOpponentFromInput(${index}, this.value)"
-                                class="w-full bg-slate-950 border border-slate-700 px-2 py-1 rounded text-red-400 mono font-bold text-center text-xs focus:border-amber-400 outline-none">
-                            <span class="text-[10px] text-slate-500 whitespace-nowrap hidden sm:inline">(Type in-game time)</span>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase">Remaining</span>
+                            <span id="op-timer-${index}" class="mono font-extrabold text-red-400 text-base">--:--</span>
                         </div>
                     </div>
 
-                    <!-- Individual Start / Cancel Control -->
-                    <div class="flex justify-between items-center pt-1 border-t border-slate-900">
+                    <!-- MIDWAY CALIBRATION TOOLBAR (FOR ADMIN TO REALIGN TIMERS LIVE) -->
+                    ${isRunning && isAdmin ? `
+                    <div class="bg-red-950/30 border border-red-500/30 rounded-lg p-2 space-y-1.5">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-slate-300 font-bold uppercase"><i class="fa-solid fa-wrench text-amber-400 mr-1"></i> Re-align In-Game Time</span>
+                            <span class="text-slate-400">Late click? Calibrate:</span>
+                        </div>
+                        <!-- Quick Nudge Buttons -->
+                        <div class="grid grid-cols-4 gap-1">
+                            <button onclick="nudgeOpponent(${index}, -15)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">-15s</button>
+                            <button onclick="nudgeOpponent(${index}, -5)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">-5s</button>
+                            <button onclick="nudgeOpponent(${index}, 5)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">+5s</button>
+                            <button onclick="nudgeOpponent(${index}, 15)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 py-1 rounded text-[10px] font-mono font-bold">+15s</button>
+                        </div>
+                        <!-- Direct in-game prep remaining time calibration -->
+                        <div class="flex items-center space-x-1 pt-1 border-t border-red-950">
+                            <span class="text-[9px] text-slate-400">In-game prep left:</span>
+                            <input type="text" id="calib-input-${index}" placeholder="04:20" class="w-16 bg-slate-900 border border-slate-700 text-amber-300 mono text-center text-xs py-0.5 rounded outline-none">
+                            <button onclick="calibrateOpponentPrep(${index})" class="flex-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold py-0.5 rounded text-[10px] transition">
+                                Sync
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Individual Start & Cancel Buttons -->
+                    <div class="pt-1">
                         ${isRunning ? `
-                            <button onclick="cancelOpponentRally(${index})" class="bg-slate-800 hover:bg-red-900/60 text-red-400 border border-red-500/40 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center">
+                            <button onclick="cancelOpponentRally(${index})" ${!isAdmin ? 'disabled' : ''} class="w-full bg-slate-800 hover:bg-red-950/80 text-red-400 hover:text-red-300 border border-red-500/40 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center">
                                 <i class="fa-solid fa-ban mr-1.5"></i> Cancel This Rally
                             </button>
                         ` : `
-                            <button onclick="triggerOpponentMarch(${index})" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center">
-                                <i class="fa-solid fa-play mr-1.5"></i> Start Rally (Single)
+                            <button onclick="triggerOpponentMarch(${index})" ${!isAdmin ? 'disabled' : ''} class="w-full bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-play mr-1.5"></i> Start Individual Rally (Now)
                             </button>
                         `}
-                        <div class="text-right">
-                            <span id="op-status-badge-${index}" class="mono font-bold text-xs ${isRunning ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}">
-                                ${isRunning ? 'MARCHING' : 'IDLE'}
-                            </span>
-                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1505,7 +1525,7 @@
             debouncedBroadcast();
         }
 
-        // Single Opponent Launch
+        // --- Individual Start ---
         function triggerOpponentMarch(index) {
             if (userRole !== 'admin') return;
             const marchSec = parseMmSsToSeconds(opponents[index].march);
@@ -1516,31 +1536,29 @@
             broadcastFullState();
         }
 
-        // UNISON LAUNCH: Starts ALL Opponents Together!
-        function triggerAllOpponents() {
-            if (userRole !== 'admin') return;
+        // --- UNISON START (ALL ENEMY RALLIES AT ONCE) ---
+        function triggerAllOpponentsUnison() {
+            if (userRole !== 'admin' || !opponents.length) return;
             const now = new Date();
             opponents.forEach(op => {
                 const marchSec = parseMmSsToSeconds(op.march);
                 const totalSec = RALLY_PREP_SECONDS + marchSec;
                 op.etaUtc = new Date(now.getTime() + (totalSec * 1000));
             });
+            speakRapid("Hostile unison rallies detected!");
             renderOpponents();
             broadcastFullState();
-            speakRapid("Enemy unison rallies engaged!");
         }
 
-        // CANCEL ALL OPPONENTS
+        // --- CANCEL ALL OPPONENTS ---
         function cancelAllOpponents() {
             if (userRole !== 'admin') return;
-            opponents.forEach(op => {
-                op.etaUtc = null;
-            });
+            opponents.forEach(op => { op.etaUtc = null; });
             renderOpponents();
             broadcastFullState();
         }
 
-        // Cancel Single Opponent
+        // --- Individual Cancel ---
         function cancelOpponentRally(index) {
             if (userRole !== 'admin') return;
             opponents[index].etaUtc = null;
@@ -1548,63 +1566,68 @@
             broadcastFullState();
         }
 
-        // Mid-Flight Calibration: Direct Input (e.g. typing "04:35" from game)
-        function calibrateOpponentFromInput(index, value) {
-            if (userRole !== 'admin') return;
-            const remainingSec = parseMmSsToSeconds(value);
-            if (remainingSec <= 0) return;
+        // --- LIVE CALIBRATION: NUDGE (-15s, -5s, +5s, +15s) ---
+        function nudgeOpponent(index, deltaSeconds) {
+            if (userRole !== 'admin' || !opponents[index].etaUtc) return;
+            opponents[index].etaUtc = new Date(opponents[index].etaUtc.getTime() + (deltaSeconds * 1000));
+            renderOpponents();
+            broadcastFullState();
+        }
+
+        // --- LIVE CALIBRATION: SYNC EXACT IN-GAME PREP REMAINING ---
+        function calibrateOpponentPrep(index) {
+            if (userRole !== 'admin' || !opponents[index].etaUtc) return;
+            const input = document.getElementById(`calib-input-${index}`);
+            if (!input || !input.value.trim()) return;
+            const prepSec = parseMmSsToSeconds(input.value);
+            const marchSec = parseMmSsToSeconds(opponents[index].march);
             const now = new Date();
-            opponents[index].etaUtc = new Date(now.getTime() + (remainingSec * 1000));
+            // New ETA = current moment + typed remaining prep seconds + march duration
+            opponents[index].etaUtc = new Date(now.getTime() + ((prepSec + marchSec) * 1000));
             renderOpponents();
-            debouncedBroadcast();
+            broadcastFullState();
         }
 
-        // Mid-Flight Calibration: Micro-Adjust Buttons (-10s, -5s, +5s, +10s)
-        function adjustOpponentSeconds(index, deltaSec) {
-            if (userRole !== 'admin') return;
-            const op = opponents[index];
-            if (!op.etaUtc) return;
-            op.etaUtc = new Date(op.etaUtc.getTime() + (deltaSec * 1000));
-            renderOpponents();
-            debouncedBroadcast();
-        }
-
+        // --- OPPONENT COUNTDOWN & STAGE TICKER ---
         function updateOpponentCountdowns() {
             const now = new Date();
             opponents.forEach((op, index) => {
-                const inputEl = document.getElementById(`op-remaining-input-${index}`);
-                const impactEl = document.getElementById(`op-impact-${index}`);
-                const statusBadge = document.getElementById(`op-status-badge-${index}`);
-                if (!inputEl) return;
+                const timerEl = document.getElementById(`op-timer-${index}`);
+                const statusEl = document.getElementById(`op-status-${index}`);
+                if (!timerEl) return;
 
                 if (op.etaUtc) {
                     const diffSec = Math.round((op.etaUtc.getTime() - now.getTime()) / 1000);
-                    
-                    if (impactEl) {
-                        impactEl.innerText = formatUtcTimestamp(op.etaUtc);
-                    }
+                    const marchSec = parseMmSsToSeconds(op.march);
 
-                    // Only update text when the user is NOT actively typing inside it!
-                    if (document.activeElement !== inputEl) {
-                        if (diffSec > 0) {
-                            inputEl.value = '-' + formatMmSs(diffSec);
-                            inputEl.className = "w-full bg-slate-950 border border-red-500/60 px-2 py-1 rounded text-red-400 mono font-bold text-center text-xs focus:border-amber-400 outline-none";
-                            if (statusBadge) statusBadge.innerText = "MARCHING";
-                        } else {
-                            inputEl.value = "IMPACT!";
-                            inputEl.className = "w-full bg-red-950 border border-red-500 px-2 py-1 rounded text-amber-300 mono font-bold text-center text-xs animate-pulse";
-                            if (statusBadge) statusBadge.innerText = "HIT LANDED";
+                    if (diffSec > 0) {
+                        timerEl.innerText = '-' + formatMmSs(diffSec);
+                        timerEl.className = "mono font-extrabold text-red-400 text-base";
+
+                        if (statusEl) {
+                            if (diffSec > marchSec) {
+                                const prepLeft = diffSec - marchSec;
+                                statusEl.innerText = `Filling (${formatMmSs(prepLeft)})`;
+                                statusEl.className = "font-bold text-xs text-amber-400 animate-pulse";
+                            } else {
+                                statusEl.innerText = `Marching (${formatMmSs(diffSec)})`;
+                                statusEl.className = "font-bold text-xs text-red-400 animate-pulse";
+                            }
+                        }
+                    } else {
+                        timerEl.innerText = "IMPACT!";
+                        timerEl.className = "mono font-extrabold text-amber-400 text-base animate-pulse";
+                        if (statusEl) {
+                            statusEl.innerText = "Hit Landed!";
+                            statusEl.className = "font-bold text-xs text-amber-300";
                         }
                     }
                 } else {
-                    if (document.activeElement !== inputEl) {
-                        inputEl.value = "--:--";
-                        inputEl.className = "w-full bg-slate-950 border border-slate-800 px-2 py-1 rounded text-slate-600 mono text-center text-xs";
+                    timerEl.innerText = "--:--";
+                    if (statusEl) {
+                        statusEl.innerText = "Idle";
+                        statusEl.className = "font-bold text-xs text-slate-500";
                     }
-                    if (impactEl) {
-                        impactEl.innerText = "--:--:-- UTC";
-                    }
-                    if (statusBadge) statusBadge.innerText = "IDLE";
                 }
             });
         }
